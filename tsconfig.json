@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "target": "es5",
+    "lib": ["dom", "dom.iterable", "es6"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx",               // ✅ 关键！
+    "jsxImportSource": "react",       // ✅ 推荐（可省略，默认就是 react）
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]              // 或 "@/*": ["./*"] 如果没有 src 目录
+    },
+    "plugins": [{ "name": "next" }]
+  },
+  "include": ["src/**/*", ".next/types/**/*.ts"],
+  "exclude": ["node_modules"]
+}
