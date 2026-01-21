@@ -7,16 +7,8 @@ import { RadioGroup, RadioGroupItem } from '@/app/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { Checkbox } from '@/app/components/ui/checkbox';
-
-interface LoverProfile {
-  id: string;
-  name: string;
-  image?: string;
-  gender: string;
-  personality: string;
-  interests: string[];
-  voiceStyle: string;
-}
+import { createLoverRequest,LoverProfile } from '../types/request';
+import { createLover } from '../request/api';
 
 interface LoverSetupProps {
   onComplete: (profile: LoverProfile) => void;
@@ -30,19 +22,19 @@ export function LoverSetup({ onComplete, onBack, editingProfile }: LoverSetupPro
       id: '',
       name: '',
       image: undefined,
-      gender: 'female',
-      personality: 'caring',
+      gender: 0,
+      personality: 0,
       interests: [],
-      voiceStyle: 'warm'
+      voiceStyle: 0
     }
   );
 
   const [imagePreview, setImagePreview] = useState<string>(editingProfile?.image || '');
 
   // 生成默认头像
-  const generateDefaultAvatar = (name: string, gender: string) => {
+  const generateDefaultAvatar = (name: string, gender: number) => {
     // 使用 DiceBear API 生成卡通头像
-    const style = gender === 'female' ? 'avataaars' : 'avataaars';
+    const style = gender === 1 ? 'avataaars' : 'avataaars';
     const seed = encodeURIComponent(name + Date.now());
     return `https://api.dicebear.com/7.x/${style}/svg?seed=${seed}&backgroundColor=b6e3f4,c0aede,d1d4f9`;
   };
@@ -69,16 +61,30 @@ export function LoverSetup({ onComplete, onBack, editingProfile }: LoverSetupPro
     }));
   };
 
-  const handleSubmit = () => {
-    if (profile.name) {
-      const finalProfile = {
-        ...profile,
-        id: profile.id || Date.now().toString(),
-        // 如果没有上传图片，生成默认头像
-        image: profile.image || generateDefaultAvatar(profile.name, profile.gender)
-      };
-      onComplete(finalProfile);
-    }
+  const handleSubmit = async () => {
+    if (!profile.name) return;
+    const finalProfile = {
+      ...profile,
+      // 如果没有上传图片，生成默认头像
+      image: profile.image || generateDefaultAvatar(profile.name, profile .gender)
+    };
+    const res = await createLover({
+      user_id: 'user-' + Date.now(),
+      lover_id: profile.id || 'lover-' + Date.now(),
+      avatar: profile.image || '',
+      name: profile.name,   
+      gender: profile.gender,
+      personality: profile.personality,
+      hobbies: profile.interests.map((_, idx) => idx), // 简单映射兴趣为数字ID
+      talking_style: profile.voiceStyle
+    } as createLoverRequest);
+    finalProfile.id = res.id;
+    finalProfile.name = res.name;
+    finalProfile.gender = res.gender;
+    finalProfile.personality = res.personality;
+    finalProfile.interests = res.interests;
+    finalProfile.voiceStyle = res.voiceStyle;
+    onComplete(finalProfile);
   };
 
   const interestOptions = [
@@ -139,31 +145,67 @@ export function LoverSetup({ onComplete, onBack, editingProfile }: LoverSetupPro
 
           {/* 名字 */}
           <div className="space-y-2">
-            <Label htmlFor="name">Ta 的名字 *</Label>
+            <Label
+              htmlFor="name"
+              className="text-pink-500 font-bold text-lg tracking-wide"
+            >
+              Ta 的名字 <span className="text-pink-400">*</span>
+            </Label>
             <Input
               id="name"
               placeholder="请输入名字"
               value={profile.name}
               onChange={(e) => setProfile({ ...profile, name: e.target.value })}
+              className="rounded-full px-5 py-3 bg-pink-50 border-2 border-pink-200 focus:border-pink-400 focus:ring-2 focus:ring-pink-100 text-pink-700 placeholder-pink-300 shadow-sm transition-all duration-200"
             />
           </div>
 
           {/* 性别 */}
           <div className="space-y-2">
-            <Label>性别</Label>
-            <RadioGroup value={profile.gender} onValueChange={(value) => setProfile({ ...profile, gender: value })}>
-              <div className="flex gap-4">
+            <Label className="text-pink-500 font-bold text-lg">性别</Label>
+            <RadioGroup
+              onValueChange={(value) => setProfile({ ...profile, gender: Number(value) })}
+              value={String(profile.gender)}
+            >
+              <div className="flex gap-6">
                 <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="female" id="female" />
-                  <Label htmlFor="female">女性</Label>
+                  <RadioGroupItem
+                    value="0"
+                    id="male"
+                    className="w-6 h-6 border-2 border-pink-300 rounded-full bg-pink-50 transition-all duration-200 shadow-sm hover:scale-110 focus:ring-2 focus:ring-pink-200"
+                  />
+                  <Label
+                    htmlFor="male"
+                    className="cursor-pointer px-3 py-1 rounded-full bg-pink-100 text-pink-600 font-medium transition-all duration-200 hover:bg-pink-200"
+                  >
+                    男性
+                  </Label>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="male" id="male" />
-                  <Label htmlFor="male">男性</Label>
+                  <RadioGroupItem
+                    value="1"
+                    id="female"
+                    className="w-6 h-6 border-2 border-purple-300 rounded-full bg-purple-50 transition-all duration-200 shadow-sm hover:scale-110 focus:ring-2 focus:ring-purple-200"
+                  />
+                  <Label
+                    htmlFor="female"
+                    className="cursor-pointer px-3 py-1 rounded-full bg-purple-100 text-purple-600 font-medium transition-all duration-200 hover:bg-purple-200"
+                  >
+                    女性
+                  </Label>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="other" id="other" />
-                  <Label htmlFor="other">其他</Label>
+                  <RadioGroupItem
+                    value="2"
+                    id="other"
+                    className="w-6 h-6 border-2 border-blue-300 rounded-full bg-blue-50 transition-all duration-200 shadow-sm hover:scale-110 focus:ring-2 focus:ring-blue-200"
+                  />
+                  <Label
+                    htmlFor="other"
+                    className="cursor-pointer px-3 py-1 rounded-full bg-blue-100 text-blue-600 font-medium transition-all duration-200 hover:bg-blue-200"
+                  >
+                    其他
+                  </Label>
                 </div>
               </div>
             </RadioGroup>
@@ -171,55 +213,58 @@ export function LoverSetup({ onComplete, onBack, editingProfile }: LoverSetupPro
 
           {/* 性格 */}
           <div className="space-y-2">
-            <Label htmlFor="personality">性格特点</Label>
-            <Select value={profile.personality} onValueChange={(value) => setProfile({ ...profile, personality: value })}>
-              <SelectTrigger>
+            <Label htmlFor="personality" className="text-pink-500 font-bold text-lg">性格特点</Label>
+            <Select onValueChange={(value) => setProfile({ ...profile, personality: Number(value) })} value={String(profile.personality)}>
+              <SelectTrigger className="rounded-full px-3 py-4 bg-pink-50 border-2 border-pink-200 focus:border-pink-400 focus:ring-2 focus:ring-pink-100 text-pink-700 shadow-sm transition-all duration-200">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="caring">温柔体贴</SelectItem>
-                <SelectItem value="cheerful">活泼开朗</SelectItem>
-                <SelectItem value="intellectual">知性优雅</SelectItem>
-                <SelectItem value="humorous">幽默风趣</SelectItem>
-                <SelectItem value="calm">沉稳内敛</SelectItem>
-                <SelectItem value="romantic">浪漫多情</SelectItem>
+                <SelectItem value="0">温柔体贴</SelectItem>
+                <SelectItem value="1">活泼开朗</SelectItem>
+                <SelectItem value="2">知性优雅</SelectItem>
+                <SelectItem value="3">幽默风趣</SelectItem>
+                <SelectItem value="4">沉稳内敛</SelectItem>
+                <SelectItem value="5">浪漫多情</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           {/* 兴趣爱好 */}
           <div className="space-y-2">
-            <Label>兴趣爱好（选择3-5个）</Label>
-            <div className="grid grid-cols-3 gap-3">
-              {interestOptions.map((interest) => (
-                <div key={interest} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={interest}
-                    checked={profile.interests.includes(interest)}
-                    onCheckedChange={() => toggleInterest(interest)}
-                  />
-                  <Label htmlFor={interest} className="cursor-pointer">{interest}</Label>
-                </div>
-              ))}
+            <Label className="text-pink-500 font-bold text-lg">兴趣爱好（选择3-5个）</Label>
+            <div className="grid grid-cols-3 gap-4">
+              {interestOptions.map((interest, index) => {
+                const colors = ['bg-pink-50 border-pink-200 hover:bg-pink-100 hover:border-pink-300', 'bg-orange-50 border-orange-200 hover:bg-orange-100 hover:border-orange-300', 'bg-blue-50 border-blue-200 hover:bg-blue-100 hover:border-blue-300', 'bg-purple-50 border-purple-200 hover:bg-purple-100 hover:border-purple-300'];
+                const colorClass = colors[index % 4];
+                return (
+                  <div key={interest} className={`flex items-center space-x-2 p-3 ${colorClass} rounded-lg border-2 hover:scale-105 transition-all duration-200 cursor-pointer shadow-sm`}>
+                    <Checkbox
+                      id={interest}
+                      checked={profile.interests.indexOf(interest) !== -1}
+                      onCheckedChange={() => toggleInterest(interest)}
+                      className="w-5 h-5 border-2 border-gray-300 rounded-md bg-white focus:ring-2 focus:ring-gray-200"
+                    />
+                    <Label htmlFor={interest} className="text-gray-700 font-medium cursor-pointer">{interest}</Label>
+                  </div>
+                );
+              })}
             </div>
           </div>
-
           {/* 说话风格 */}
           <div className="space-y-2">
-            <Label htmlFor="voiceStyle">说话风格</Label>
-            <Select value={profile.voiceStyle} onValueChange={(value) => setProfile({ ...profile, voiceStyle: value })}>
-              <SelectTrigger>
+            <Label htmlFor="voiceStyle" className="text-pink-500 font-bold text-lg">说话风格</Label>
+            <Select onValueChange={(value) => setProfile({ ...profile, voiceStyle: Number(value) })} value={String(profile.voiceStyle)}>
+              <SelectTrigger className="rounded-full px-3 py-4 bg-pink-50 border-2 border-pink-200 focus:border-pink-400 focus:ring-2 focus:ring-pink-100 text-pink-700 shadow-sm transition-all duration-200">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="warm">温暖亲切</SelectItem>
-                <SelectItem value="cute">可爱俏皮</SelectItem>
-                <SelectItem value="mature">成熟稳重</SelectItem>
-                <SelectItem value="poetic">文艺浪漫</SelectItem>
+                <SelectItem value="0">温暖亲切</SelectItem>
+                <SelectItem value="1">可爱俏皮</SelectItem>
+                <SelectItem value="2">成熟稳重</SelectItem>
+                <SelectItem value="3">文艺浪漫</SelectItem>
               </SelectContent>
             </Select>
           </div>
-
           <Button 
             onClick={handleSubmit} 
             className="w-full bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600"
