@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { LoverSetup } from './components/LoverSetup';
 import { ChatInterface } from './components/ChatInterface';
 import { LoversList } from './components/LoversList';
+import { getLoverProfileList } from './request/api';
 
 interface LoverProfile {
   id: string;
@@ -173,6 +174,7 @@ export default function App() {
 
   // 默认返回列表
   return (
+    
     <LoversList
       lovers={lovers}
       currentLoverId={currentLoverId}
