@@ -68,8 +68,13 @@ export function LoverSetup({ onComplete, onBack, editingProfile }: LoverSetupPro
       // 如果没有上传图片，生成默认头像
       image: profile.image || generateDefaultAvatar(profile.name, profile .gender)
     };
+    let userId = localStorage.getItem('userId');
+    if (!userId) {
+      userId = `user-${Date.now()}`;
+      localStorage.setItem('userId', userId);
+    }
     const res = await createLover({
-      user_id: 'user-' + Date.now(),
+      user_id: userId,
       lover_id: profile.id || 'lover-' + Date.now(),
       avatar: profile.image || '',
       name: profile.name,   

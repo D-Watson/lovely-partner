@@ -32,19 +32,19 @@ export async function createLover(data: createLoverRequest): Promise<LoverProfil
     }
 }
 
-export async function getLoverProfileList(loverId: string): Promise<LoverProfile[]> {
+export async function getLoverProfileList(user_id: string): Promise<LoverProfile[]> {
     var reqUrl = url+'list';
     try {
         const response = await axios({
             url: reqUrl,
             method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            params: { 
+                user_id: user_id
+            }
         })
         console.log('Get lover profile list response:', response.data);
         const res = response.data as any;
-        const loverProfiles: LoverProfile[] = res.map((item: any) => ({
+        const loverProfiles: LoverProfile[] = res.data.map((item: any) => ({
             id: item.id,
             name: item.name,
             image: item.image,  

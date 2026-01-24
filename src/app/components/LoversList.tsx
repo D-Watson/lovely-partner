@@ -4,16 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app
 import { Avatar, AvatarFallback, AvatarImage } from '@/app/components/ui/avatar';
 import { Badge } from '@/app/components/ui/badge';
 import { ScrollArea } from '@/app/components/ui/scroll-area';
-
-interface LoverProfile {
-  id: string;
-  name: string;
-  image?: string;
-  gender: string;
-  personality: string;
-  interests: string[];
-  voiceStyle: string;
-}
+import { LoverProfile } from '@/app/types/request';
 
 interface LoversListProps {
   lovers: LoverProfile[];
@@ -87,7 +78,7 @@ export function LoversList({ lovers, currentLoverId, onSelectLover, onCreateNew,
                   <Avatar className="w-24 h-24 border-4 border-white shadow-lg">
                     <AvatarImage src={lover.image} />
                     <AvatarFallback className="bg-gradient-to-br from-pink-400 to-purple-400 text-white text-2xl">
-                      {lover.name[0]}
+                      {lover.name}
                     </AvatarFallback>
                   </Avatar>
                 </div>

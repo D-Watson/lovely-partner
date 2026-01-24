@@ -3,65 +3,69 @@ import { LoverSetup } from './components/LoverSetup';
 import { ChatInterface } from './components/ChatInterface';
 import { LoversList } from './components/LoversList';
 import { getLoverProfileList } from './request/api';
-
-interface LoverProfile {
-  id: string;
-  name: string;
-  image?: string;
-  gender: string;
-  personality: string;
-  interests: string[];
-  voiceStyle: string;
-}
+import { LoverProfile } from './types/request';
 
 type ViewMode = 'list' | 'setup' | 'chat';
 
 export default function App() {
   const [lovers, setLovers] = useState<LoverProfile[]>([]);
   const [currentLoverId, setCurrentLoverId] = useState<string | undefined>();
+  const [userId, setUserId] = useState<string>('user_12345'); // 示例用户ID
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    // 从 localStorage 加载所有虚拟恋人
-    const savedLovers = localStorage.getItem('lovers');
-    const savedCurrentId = localStorage.getItem('currentLoverId');
-    
-    if (savedLovers) {
-      try {
-        const parsed = JSON.parse(savedLovers);
-        setLovers(parsed);
-        
-        // 如果有保存的当前ID且该恋人存在，则直接进入聊天
-        if (savedCurrentId && parsed.some((l: LoverProfile) => l.id === savedCurrentId)) {
-          setCurrentLoverId(savedCurrentId);
-          setViewMode('chat');
-        }
-      } catch (e) {
-        console.error('Failed to load lovers:', e);
-      }
-    }
-    
-    setIsLoading(false);
-  }, []);
-
-  // 保存恋人列表到 localStorage
-  useEffect(() => {
-    if (lovers.length > 0) {
-      localStorage.setItem('lovers', JSON.stringify(lovers));
-    }
-  }, [lovers]);
-
-  // 保存当前选中的恋人ID
-  useEffect(() => {
-    if (currentLoverId) {
-      localStorage.setItem('currentLoverId', currentLoverId);
-    }
-  }, [currentLoverId]);
 
   const handleCreateNew = () => {
     setViewMode('setup');
   };
+  useEffect(() => {
+    // 生成或加载用户ID
+    let savedUserId = localStorage.getItem('userId');
+    if (!savedUserId) {
+      savedUserId = `user-${Date.now()}`;
+      localStorage.setItem('userId', savedUserId);
+    }
+    setUserId(savedUserId);
+  }, []);
+  
+  useEffect(() => {
+    // 加载恋人列表
+    async function fetchLovers() {
+      setIsLoading(true);
+      try {
+        let userId = localStorage.getItem('userId');
+        if (!userId) {
+          userId = `user-${Date.now()}`;
+          localStorage.setItem('userId', userId);
+        }
+        const loverProfiles = await getLoverProfileList(userId);
+        console.log('Fetched lover profiles:', loverProfiles);
+        setLovers(loverProfiles);
+        
+        // 尝试加载上次选中的恋人
+        const savedLoverId = localStorage.getItem('currentLoverId');
+        if (savedLoverId && loverProfiles.some(l => l.id === savedLoverId)) {
+          setCurrentLoverId(savedLoverId);
+          setViewMode('chat');
+        } else {
+          setViewMode('list');
+        }
+      } catch (error) {
+        console.error('Failed to fetch lovers:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    
+    fetchLovers();
+  }, []);
+
+  useEffect(() => {
+    // 保存当前选中的恋人ID
+    if (currentLoverId) {
+      localStorage.setItem('currentLoverId', currentLoverId);
+    }
+  }, [currentLoverId]); 
+
 
   const handleProfileComplete = (profile: LoverProfile) => {
     // 检查是否是编辑现有恋人

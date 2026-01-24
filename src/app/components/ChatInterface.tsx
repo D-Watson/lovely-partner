@@ -7,6 +7,7 @@ import { Card } from '@/app/components/ui/card';
 import { Badge } from '@/app/components/ui/badge';
 import { NewsPanel } from './NewsPanel';
 import { DailyCarePanel } from './DailyCarePanel';
+import { LoverProfile } from '@/app/types/request';
 
 interface Message {
   id: string;
@@ -16,15 +17,6 @@ interface Message {
   type?: 'text' | 'care' | 'news';
 }
 
-interface LoverProfile {
-  id: string;
-  name: string;
-  image?: string;
-  gender: string;
-  personality: string;
-  interests: string[];
-  voiceStyle: string;
-}
 
 interface ChatInterfaceProps {
   profile: LoverProfile;
@@ -75,7 +67,7 @@ export function ChatInterface({ profile, onReset, onBack }: ChatInterfaceProps) 
     const initialMessages = [{
       id: '1',
       sender: 'lover' as const,
-      content: greetings,
+      content: '',
       timestamp: new Date(),
       type: 'text' as const
     }];
@@ -101,16 +93,16 @@ export function ChatInterface({ profile, onReset, onBack }: ChatInterfaceProps) 
     const hour = new Date().getHours();
     const timeGreeting = hour < 12 ? '早上好' : hour < 18 ? '下午好' : '晚上好';
     
-    const greetings = {
-      caring: `${timeGreeting}亲爱的～今天过得怎么样呀？我一直在想你呢💕`,
-      cheerful: `${timeGreeting}！哇，终于等到你啦！今天想和我聊什么呢？😊`,
-      intellectual: `${timeGreeting}，很高兴见到你。今天有什么想分享的吗？`,
-      humorous: `${timeGreeting}～猜猜我今天为你准备了什么惊喜？哈哈，就是我自己！😄`,
-      calm: `${timeGreeting}，希望你今天一切顺利。`,
-      romantic: `${timeGreeting}我的挚爱，每一刻都在期待与你相遇✨`
-    };
+    // const greetings = {
+    //   caring: `${timeGreeting}亲爱的～今天过得怎么样呀？我一直在想你呢💕`,
+    //   cheerful: `${timeGreeting}！哇，终于等到你啦！今天想和我聊什么呢？😊`,
+    //   intellectual: `${timeGreeting}，很高兴见到你。今天有什么想分享的吗？`,
+    //   humorous: `${timeGreeting}～猜猜我今天为你准备了什么惊喜？哈哈，就是我自己！😄`,
+    //   calm: `${timeGreeting}，希望你今天一切顺利。`,
+    //   romantic: `${timeGreeting}我的挚爱，每一刻都在期待与你相遇✨`
+    // };
 
-    return greetings[profile.personality as keyof typeof greetings] || greetings.caring;
+    // return greetings[profile.personality as keyof typeof greetings] || greetings.caring;
   };
 
   const sendCareMessage = () => {
