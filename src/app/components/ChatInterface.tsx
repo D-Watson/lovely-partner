@@ -8,6 +8,7 @@ import { Badge } from '@/app/components/ui/badge';
 import { NewsPanel } from './NewsPanel';
 import { DailyCarePanel } from './DailyCarePanel';
 import { LoverProfile } from '@/app/types/request';
+import { connectToChat, sendChatMessage } from '@/app/request/api';
 
 interface Message {
   id: string;
@@ -29,11 +30,13 @@ export function ChatInterface({ profile, onReset, onBack }: ChatInterfaceProps) 
   const [inputValue, setInputValue] = useState('');
   const [showNews, setShowNews] = useState(false);
   const [showCare, setShowCare] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const wsRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
     // 从 localStorage 加载该恋人的聊天记录
-    const savedMessages = localStorage.getItem(`messages_${profile.id}`);
+    const savedMessages = localStorage.getItem(`messages_${profile.loverId}`);
     if (savedMessages) {
       try {
         const parsed = JSON.parse(savedMessages);
@@ -52,14 +55,60 @@ export function ChatInterface({ profile, onReset, onBack }: ChatInterfaceProps) 
       // 没有历史记录，初始化聊天
       initializeChat();
     }
-  }, [profile.id]);
+
+    // 连接到 WebSocket
+    connectWebSocket();
+
+    return () => {
+      // 清理 WebSocket 连接
+      if (wsRef.current) {
+        wsRef.current.close();
+      }
+    };
+  }, [profile.loverId]);
+
+  // 连接 WebSocket
+  const connectWebSocket = () => {
+    const userId = localStorage.getItem('userId');
+    const loverId = profile.loverId;
+    
+    if (!userId || !loverId) {
+      console.error('Missing userId or loverId');
+      return;
+    }
+
+    wsRef.current = connectToChat(
+      userId,
+      loverId,
+      (message: any) => {
+        // 接收到服务端消息
+        const loverMessage: Message = {
+          id: Date.now().toString(),
+          sender: 'lover',
+          content: message.content || JSON.stringify(message),
+          timestamp: new Date(),
+          type: 'text'
+        };
+        setMessages(prev => [...prev, loverMessage]);
+      },
+      (error) => {
+        console.error('WebSocket error:', error);
+        setIsConnected(false);
+      },
+      (event) => {
+        console.log('WebSocket closed');
+        setIsConnected(false);
+      }
+    );
+    setIsConnected(true);
+  };
 
   // 保存消息到 localStorage
   useEffect(() => {
     if (messages.length > 0) {
-      localStorage.setItem(`messages_${profile.id}`, JSON.stringify(messages));
+      localStorage.setItem(`messages_${profile.loverId}`, JSON.stringify(messages));
     }
-  }, [messages, profile.id]);
+  }, [messages, profile.loverId]);
 
   const initializeChat = () => {
     // 初始问候消息
@@ -177,19 +226,27 @@ export function ChatInterface({ profile, onReset, onBack }: ChatInterfaceProps) 
     };
 
     setMessages(prev => [...prev, userMessage]);
+    
+    // 通过 WebSocket 发送消息到后端
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      sendChatMessage(wsRef.current, inputValue);
+      console.log('Message sent via WebSocket:', inputValue);
+    } else {
+      console.warn('WebSocket is not connected');
+      // 后备方案：使用本地 AI 回复
+      setTimeout(() => {
+        const response: Message = {
+          id: (Date.now() + 1).toString(),
+          sender: 'lover',
+          content: generateResponse(inputValue),
+          timestamp: new Date(),
+          type: 'text'
+        };
+        setMessages(prev => [...prev, response]);
+      }, 1000);
+    }
+    
     setInputValue('');
-
-    // 模拟AI回复
-    setTimeout(() => {
-      const response: Message = {
-        id: (Date.now() + 1).toString(),
-        sender: 'lover',
-        content: generateResponse(inputValue),
-        timestamp: new Date(),
-        type: 'text'
-      };
-      setMessages(prev => [...prev, response]);
-    }, 1000);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -231,7 +288,19 @@ export function ChatInterface({ profile, onReset, onBack }: ChatInterfaceProps) 
             </Avatar>
             <div>
               <h2 className="font-semibold">{profile.name}</h2>
-              <p className="text-sm text-gray-500">在线 • 随时陪伴你</p>
+              <p className="text-sm text-gray-500">
+                {isConnected ? (
+                  <span className="flex items-center gap-1">
+                    <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                    在线 • 随时陪伴你
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1">
+                    <span className="w-2 h-2 bg-gray-400 rounded-full animate-pulse"></span>
+                    连接中...
+                  </span>
+                )}
+              </p>
             </div>
           </div>
           

@@ -19,6 +19,8 @@ export interface createLoverRequest{
 
 export interface LoverProfile {
   id: string;
+  userId: string;
+  loverId:string
   name: string;
   image?: string;
   gender: number;

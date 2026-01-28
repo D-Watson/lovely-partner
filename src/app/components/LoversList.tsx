@@ -15,13 +15,13 @@ interface LoversListProps {
 }
 
 export function LoversList({ lovers, currentLoverId, onSelectLover, onCreateNew, onDeleteLover }: LoversListProps) {
-  const personalityLabels: Record<string, string> = {
-    caring: '温柔体贴',
-    cheerful: '活泼开朗',
-    intellectual: '知性优雅',
-    humorous: '幽默风趣',
-    calm: '沉稳内敛',
-    romantic: '浪漫多情'
+  const personalityLabels: Record<number, string> = {
+    0: '温柔体贴',
+    1: '活泼开朗',
+    2: '知性优雅',
+    3: '幽默风趣',
+    4: '沉稳内敛',
+    5: '浪漫多情'
   };
 
   const handleDelete = (e: React.MouseEvent, loverId: string) => {
@@ -59,15 +59,15 @@ export function LoversList({ lovers, currentLoverId, onSelectLover, onCreateNew,
           {/* 现有恋人列表 */}
           {lovers.map((lover) => (
             <Card
-              key={lover.id}
+              key={lover.loverId}
               className={`cursor-pointer transition-all hover:shadow-lg group relative ${
-                currentLoverId === lover.id 
+                currentLoverId === lover.loverId
                   ? 'ring-2 ring-pink-500 shadow-lg' 
                   : 'hover:ring-2 hover:ring-pink-300'
               }`}
-              onClick={() => onSelectLover(lover.id)}
+              onClick={() => onSelectLover(lover.loverId)}
             >
-              {currentLoverId === lover.id && (
+              {currentLoverId === lover.loverId && (
                 <Badge className="absolute -top-2 -right-2 bg-gradient-to-r from-pink-500 to-purple-500">
                   当前
                 </Badge>
@@ -103,7 +103,7 @@ export function LoversList({ lovers, currentLoverId, onSelectLover, onCreateNew,
                     className="flex-1"
                     onClick={(e) => {
                       e.stopPropagation();
-                      onSelectLover(lover.id);
+                      onSelectLover(lover.loverId);
                     }}
                   >
                     <MessageCircle className="w-4 h-4 mr-2" />

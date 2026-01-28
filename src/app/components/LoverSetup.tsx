@@ -11,25 +11,24 @@ import { createLoverRequest,LoverProfile } from '../types/request';
 import { createLover } from '../request/api';
 
 interface LoverSetupProps {
-  onComplete: (profile: LoverProfile) => void;
+  onComplete: () => void;
   onBack?: () => void;
-  editingProfile?: LoverProfile;
 }
 
-export function LoverSetup({ onComplete, onBack, editingProfile }: LoverSetupProps) {
-  const [profile, setProfile] = useState<LoverProfile>(
-    editingProfile || {
-      id: '',
-      name: '',
-      image: undefined,
-      gender: 0,
-      personality: 0,
-      interests: [],
-      voiceStyle: 0
-    }
-  );
+export function LoverSetup({ onComplete, onBack }: LoverSetupProps) {
+  const [profile, setProfile] = useState<LoverProfile>({
+    id: '',
+    loverId: '',
+    userId: '',
+    name: '',
+    image: undefined,
+    gender: 0,
+    personality: 0,
+    interests: [],
+    voiceStyle: 0
+  });
 
-  const [imagePreview, setImagePreview] = useState<string>(editingProfile?.image || '');
+  const [imagePreview, setImagePreview] = useState<string>('');
 
   // 生成默认头像
   const generateDefaultAvatar = (name: string, gender: number) => {
@@ -66,7 +65,7 @@ export function LoverSetup({ onComplete, onBack, editingProfile }: LoverSetupPro
     const finalProfile = {
       ...profile,
       // 如果没有上传图片，生成默认头像
-      image: profile.image || generateDefaultAvatar(profile.name, profile .gender)
+      image: profile.image || generateDefaultAvatar(profile.name, profile.gender)
     };
     let userId = localStorage.getItem('userId');
     if (!userId) {
@@ -76,20 +75,14 @@ export function LoverSetup({ onComplete, onBack, editingProfile }: LoverSetupPro
     const res = await createLover({
       user_id: userId,
       lover_id: profile.id || 'lover-' + Date.now(),
-      avatar: profile.image || '',
+      avatar: finalProfile.image,
       name: profile.name,   
       gender: profile.gender,
       personality: profile.personality,
-      hobbies: profile.interests.map((_, idx) => idx), // 简单映射兴趣为数字ID
+      hobbies: profile.interests.map(interest => interestOptions.indexOf(interest)),
       talking_style: profile.voiceStyle
     } as createLoverRequest);
-    finalProfile.id = res.id;
-    finalProfile.name = res.name;
-    finalProfile.gender = res.gender;
-    finalProfile.personality = res.personality;
-    finalProfile.interests = res.interests;
-    finalProfile.voiceStyle = res.voiceStyle;
-    onComplete(finalProfile);
+    onComplete();
   };
 
   const interestOptions = [
@@ -116,7 +109,7 @@ export function LoverSetup({ onComplete, onBack, editingProfile }: LoverSetupPro
             <Heart className="w-12 h-12 text-pink-500" />
           </div>
           <CardTitle className="text-3xl">
-            {editingProfile ? '编辑虚拟恋人' : '创建你的虚拟恋人'}
+            创建你的虚拟恋人
           </CardTitle>
           <CardDescription>定制一个专属于你的AI伴侣</CardDescription>
         </CardHeader>
