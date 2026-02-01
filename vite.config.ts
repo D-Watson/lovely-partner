@@ -16,4 +16,8 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  server: {
+    // 代理配置已移除，API 直接使用完整 URL
+    // http://localhost:8080/lovers/*
+  }
 })

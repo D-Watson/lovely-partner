@@ -1,8 +1,9 @@
 import axios from 'axios';
 import { createLoverRequest, LoverProfile } from '../types/request';
 
+import io, { Socket } from 'socket.io-client';
+
 const url = 'http://localhost:8080/lovers/';
-const wsUrl = 'ws://localhost:8080/lovers';
 
 export async function createLover(data: createLoverRequest): Promise<LoverProfile> {
     var reqUrl = url+'create';
@@ -40,6 +41,7 @@ export async function createLover(data: createLoverRequest): Promise<LoverProfil
 
 export async function getLoverProfileList(user_id: string): Promise<LoverProfile[]> {
     var reqUrl = url+'list';
+    console.log('Getting lover profile list for user_id:', user_id);
     try {
         const response = await axios({
             url: reqUrl,
@@ -68,57 +70,9 @@ export async function getLoverProfileList(user_id: string): Promise<LoverProfile
     }
 }
 
-export function connectToChat(
-    userId: string,
-    loverId: string,
-    onMessage: (message: any) => void,
-    onError?: (error: Event) => void,
-    onClose?: (event: CloseEvent) => void
-): WebSocket {
-    const chatUrl = `${wsUrl}/chat/${userId}/${loverId}`;
-    console.log('Connecting to WebSocket:', chatUrl);
-    
-    const ws = new WebSocket(chatUrl);
-    
-    ws.onopen = () => {
-        console.log('WebSocket connected successfully');
-    };
-    
-    ws.onmessage = (event) => {
-        console.log('Received message:', event.data);
-        try {
-            const message = JSON.parse(event.data);
-            onMessage(message);
-        } catch (e) {
-            console.error('Failed to parse WebSocket message:', e);
-            onMessage({ content: event.data });
-        }
-    };
-    
-    ws.onerror = (error) => {
-        console.error('WebSocket error details:', {
-            type: error.type,
-            message: error,
-            url: ws.url,
-            readyState: ws.readyState
-        });
-        onError?.(error);
-    };
-    
-    ws.onclose = (event) => {
-        console.log('WebSocket closed:', {
-            code: event.code,
-            reason: event.reason,
-            wasClean: event.wasClean
-        });
-        onClose?.(event);
-    };
-    
-    return ws;
-}
 
-export function sendChatMessage(ws: WebSocket, message: string): void {
-    if (ws.readyState === WebSocket.OPEN) {
+export function sendChatMessage(ws: Socket, message: string): void {
+    if (ws.connected) {
         ws.send(message);
     } else {
         console.error('WebSocket is not open');

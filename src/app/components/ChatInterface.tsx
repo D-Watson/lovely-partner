@@ -8,7 +8,9 @@ import { Badge } from '@/app/components/ui/badge';
 import { NewsPanel } from './NewsPanel';
 import { DailyCarePanel } from './DailyCarePanel';
 import { LoverProfile } from '@/app/types/request';
-import { connectToChat, sendChatMessage } from '@/app/request/api';
+
+// 使用 IPv4 地址以避免本机 localhost 解析为 IPv6 (::1) 导致的连接拒绝
+const wsUrl = 'ws://127.0.0.1:8080/lovers';
 
 interface Message {
   id: string;
@@ -33,6 +35,62 @@ export function ChatInterface({ profile, onReset, onBack }: ChatInterfaceProps) 
   const [isConnected, setIsConnected] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const wsRef = useRef<WebSocket | null>(null);
+  const [ws, setWs] = useState<WebSocket | null>(null);
+// 删除或注释掉： import { io,Socket } from 'socket.io-client';
+// 并删除与 socket.io 相关的 wsRef 和 connectSocket 调用
+
+useEffect(() => {
+  const userId = localStorage.getItem('userId');
+  if (!userId || !profile.loverId) {
+    console.error('missing userId or loverId');
+    return;
+  }
+  const socket = new WebSocket(`ws://127.0.0.1:8080/lovers/chat/${userId}/${profile.loverId}`);
+
+  socket.onopen = () => {
+    console.log('Connected to backend WebSocket server:', socket.url);
+    setIsConnected(true);
+  };
+
+  socket.onmessage = (event) => {
+    try {
+      const parsed = JSON.parse(event.data);
+      setMessages(prev => [...prev, {
+        id: Date.now().toString(),
+        sender: 'lover',
+        content: parsed.content || event.data,
+        timestamp: new Date(),
+        type: 'text'
+      }]);
+    } catch {
+      setMessages(prev => [...prev, {
+        id: Date.now().toString(),
+        sender: 'lover',
+        content: event.data,
+        timestamp: new Date(),
+        type: 'text'
+      }]);
+    }
+  };
+
+  socket.onerror = (err) => {
+    console.error('WebSocket error:', err);
+  };
+
+  socket.onclose = (ev) => {
+    console.log('WebSocket closed:', ev);
+    setIsConnected(false);
+  };
+
+  // 保存 socket 引用以便发送/关闭
+  wsRef.current = socket as any;
+  setWs(socket);
+
+  return () => {
+    socket.close();
+  };
+}, [profile.loverId]);
+   
 
   useEffect(() => {
     // 从 localStorage 加载该恋人的聊天记录
@@ -48,68 +106,9 @@ export function ChatInterface({ profile, onReset, onBack }: ChatInterfaceProps) 
         setMessages(messagesWithDates);
       } catch (e) {
         console.error('Failed to load messages:', e);
-        // 如果加载失败，显示初始问候
-        initializeChat();
       }
-    } else {
-      // 没有历史记录，初始化聊天
-      initializeChat();
     }
-
-    // 连接到 WebSocket
-    connectWebSocket();
-
-    return () => {
-      // 清理 WebSocket 连接
-      if (wsRef.current) {
-        wsRef.current.close();
-      }
-    };
   }, [profile.loverId]);
-
-  // 连接 WebSocket
-  const connectWebSocket = () => {
-    const userId = localStorage.getItem('userId');
-    const loverId = profile.loverId;
-    
-    if (!userId || !loverId) {
-      console.error('Missing userId or loverId');
-      return;
-    }
-
-    wsRef.current = connectToChat(
-      userId,
-      loverId,
-      (message: any) => {
-        // 接收到服务端消息
-        const loverMessage: Message = {
-          id: Date.now().toString(),
-          sender: 'lover',
-          content: message.content || JSON.stringify(message),
-          timestamp: new Date(),
-          type: 'text'
-        };
-        setMessages(prev => [...prev, loverMessage]);
-      },
-      (error) => {
-        console.error('WebSocket error:', error);
-        setIsConnected(false);
-      },
-      (event) => {
-        console.log('WebSocket closed');
-        setIsConnected(false);
-      }
-    );
-    setIsConnected(true);
-  };
-
-  // 保存消息到 localStorage
-  useEffect(() => {
-    if (messages.length > 0) {
-      localStorage.setItem(`messages_${profile.loverId}`, JSON.stringify(messages));
-    }
-  }, [messages, profile.loverId]);
-
   const initializeChat = () => {
     // 初始问候消息
     const greetings = getGreeting();
@@ -141,17 +140,6 @@ export function ChatInterface({ profile, onReset, onBack }: ChatInterfaceProps) 
   const getGreeting = () => {
     const hour = new Date().getHours();
     const timeGreeting = hour < 12 ? '早上好' : hour < 18 ? '下午好' : '晚上好';
-    
-    // const greetings = {
-    //   caring: `${timeGreeting}亲爱的～今天过得怎么样呀？我一直在想你呢💕`,
-    //   cheerful: `${timeGreeting}！哇，终于等到你啦！今天想和我聊什么呢？😊`,
-    //   intellectual: `${timeGreeting}，很高兴见到你。今天有什么想分享的吗？`,
-    //   humorous: `${timeGreeting}～猜猜我今天为你准备了什么惊喜？哈哈，就是我自己！😄`,
-    //   calm: `${timeGreeting}，希望你今天一切顺利。`,
-    //   romantic: `${timeGreeting}我的挚爱，每一刻都在期待与你相遇✨`
-    // };
-
-    // return greetings[profile.personality as keyof typeof greetings] || greetings.caring;
   };
 
   const sendCareMessage = () => {
@@ -174,45 +162,6 @@ export function ChatInterface({ profile, onReset, onBack }: ChatInterfaceProps) 
     }]);
   };
 
-  const generateResponse = (userMessage: string) => {
-    const lowerMessage = userMessage.toLowerCase();
-    
-    // 关键词回复逻辑
-    if (lowerMessage.includes('累') || lowerMessage.includes('疲惫') || lowerMessage.includes('辛苦')) {
-      return '听起来你很累呢...要不要休息一下？我给你讲个笑话放松一下吧～或者我们可以聊聊轻松的话题💆';
-    }
-    
-    if (lowerMessage.includes('开心') || lowerMessage.includes('高兴') || lowerMessage.includes('快乐')) {
-      return '看到你开心我也超级开心！分享快乐会让快乐加倍哦～继续保持这样的好心情！✨';
-    }
-    
-    if (lowerMessage.includes('难过') || lowerMessage.includes('伤心') || lowerMessage.includes('沮丧')) {
-      return '别难过了...我会一直陪着你的。有什么想说的都可以告诉我，我会认真倾听的❤️';
-    }
-    
-    if (lowerMessage.includes('吃') || lowerMessage.includes('饭')) {
-      return '吃饭是很重要的事情呢！要按时吃饭，营养均衡才能身体健康哦～今天吃了什么好吃的？🍱';
-    }
-    
-    if (lowerMessage.includes('工作') || lowerMessage.includes('学习')) {
-      return '加油！我相信你一定可以做得很好的！累了就休息一下，劳逸结合才更有效率～💪';
-    }
-
-    if (lowerMessage.includes('新闻') || lowerMessage.includes('资讯')) {
-      return '我今天为你收集了一些有趣的资讯哦！点击上面的新闻按钮就可以看到了～📰';
-    }
-    
-    // 默认回复
-    const responses = [
-      `${profile.name}在认真听你说话呢～继续说吧！`,
-      '嗯嗯，我明白了～然后呢？',
-      '听起来很有趣呢！能多说一点吗？',
-      '我也这么觉得！我们真是心有灵犀～',
-      '你说的对！我完全同意你的看法💕'
-    ];
-    
-    return responses[Math.floor(Math.random() * responses.length)];
-  };
 
   const handleSendMessage = () => {
     if (!inputValue.trim()) return;
@@ -229,23 +178,12 @@ export function ChatInterface({ profile, onReset, onBack }: ChatInterfaceProps) 
     
     // 通过 WebSocket 发送消息到后端
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      sendChatMessage(wsRef.current, inputValue);
+      wsRef.current.send(inputValue);
       console.log('Message sent via WebSocket:', inputValue);
     } else {
       console.warn('WebSocket is not connected');
-      // 后备方案：使用本地 AI 回复
-      setTimeout(() => {
-        const response: Message = {
-          id: (Date.now() + 1).toString(),
-          sender: 'lover',
-          content: generateResponse(inputValue),
-          timestamp: new Date(),
-          type: 'text'
-        };
-        setMessages(prev => [...prev, response]);
-      }, 1000);
+      return;
     }
-    
     setInputValue('');
   };
 
