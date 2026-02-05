@@ -3,10 +3,10 @@ import { createLoverRequest, LoverProfile } from '../types/request';
 
 import io, { Socket } from 'socket.io-client';
 
-const url = 'http://localhost:8080/lovers/';
+const url = 'http://localhost:8080/';
 
 export async function createLover(data: createLoverRequest): Promise<LoverProfile> {
-    var reqUrl = url+'create';
+    var reqUrl = url+'lovers/create';
     console.log('Creating lover with data:', data);
     try {
         const response = await axios({
@@ -39,8 +39,32 @@ export async function createLover(data: createLoverRequest): Promise<LoverProfil
     }
 }
 
+export async function getLoverProfile(user_id: string, lover_id: string, prompt: string): Promise<string> {
+    var reqUrl = url+'images/upload';
+    try {
+        const response = await axios({
+            url: reqUrl,
+            method: 'POST',
+            data: { 
+                user_id: user_id,
+                lover_id: lover_id,
+                prompt: prompt
+            },
+            headers: {
+            'Content-Type': 'application/json'
+            },
+        })
+        const res = response.data as any;
+        const item = res.data || res; // backend may return {data: {...}} or {...}
+        return item.data;
+    } catch (error) {
+        console.error('Error getting lover profile:', error);
+        throw error;
+    }
+}
+
 export async function getLoverProfileList(user_id: string): Promise<LoverProfile[]> {
-    var reqUrl = url+'list';
+    var reqUrl = url+'lovers/list';
     console.log('Getting lover profile list for user_id:', user_id);
     try {
         const response = await axios({
@@ -68,6 +92,29 @@ export async function getLoverProfileList(user_id: string): Promise<LoverProfile
         console.error('Error getting lover profile list:', error);
         throw error;
     }
+}
+
+export function deleteLover(user_id: string, lover_id: string): Promise<void> {
+    var reqUrl = url+'lovers/delete';
+    return new Promise<void>(async (resolve, reject) => {
+        try {
+            await axios({
+                url: reqUrl,
+                method: 'POST',
+                data: { 
+                    user_id: user_id,
+                    lover_id: lover_id
+                },
+                headers: {
+                'Content-Type': 'application/json'      
+                },
+            });
+            resolve();
+        } catch (error) {
+            console.error('Error deleting lover:', error);
+            reject(error);
+        }
+    });
 }
 
 

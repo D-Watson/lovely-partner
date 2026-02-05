@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LoversList } from '../components/LoversList';
-import { getLoverProfileList } from '../request/api';
+import { getLoverProfileList,deleteLover } from '../request/api';
 import { LoverProfile } from '../types/request';
 
 export function LoversPage() {
@@ -18,29 +18,40 @@ export function LoversPage() {
       localStorage.setItem('userId', savedUserId);
     }
   }, []);
-
  
 async function fetchLovers() {
     setIsLoading(true);
     setError(null);
     try {
-    let userId = localStorage.getItem('userId');
-    if (!userId) {
+      let userId = localStorage.getItem('userId');
+      if (!userId) {
         userId = `user-${Date.now()}`;
         localStorage.setItem('userId', userId);
-    }
-    const loverProfiles = await getLoverProfileList(userId);
-    console.log('Fetched lover profiles:', loverProfiles);
-    setLovers(loverProfiles);
+      }
+      const loverProfiles = await getLoverProfileList(userId);
+      console.log('Fetched lover profiles:', loverProfiles);
+      setLovers(loverProfiles);
     } catch (error) {
-    console.error('Failed to fetch lovers:', error);
-    setError('无法加载虚拟恋人列表，请检查网络连接或后端服务是否运行');
+      console.error('Failed to fetch lovers:', error);
+      setError('无法加载虚拟恋人列表，请检查网络连接或后端服务是否运行');
     } finally {
-    setIsLoading(false);
+      setIsLoading(false);
     }
 }
 
-fetchLovers();
+useEffect(() => {
+  // initial fetch
+  fetchLovers();
+
+  // listen for avatar updates
+  const handler = (e: any) => {
+    const { loverId, image } = e.detail || {};
+    if (!loverId) return;
+    setLovers(prev => prev.map(l => l.loverId === loverId ? { ...l, image } : l));
+  };
+  window.addEventListener('lover-avatar-updated', handler as EventListener);
+  return () => window.removeEventListener('lover-avatar-updated', handler as EventListener);
+}, []);
 
 
   const handleSelectLover = (loverId: string) => {
@@ -54,38 +65,25 @@ fetchLovers();
   };
 
   const handleDeleteLover = (loverId: string) => {
+    console.log(loverId);
     setLovers(lovers.filter(l => l.loverId !== loverId));
     localStorage.removeItem(`messages_${loverId}`);
     localStorage.removeItem(`lastCareDate_${loverId}`);
-
     if (currentLoverId === loverId) {
       setCurrentLoverId(undefined);
+    }
+
+    let userId = localStorage.getItem('userId');
+    if (userId) {
+      deleteLover(userId, loverId).catch(err => {
+        console.error('Failed to delete lover from backend:', err);
+      });
     }
   };
 
   const handleRetry = () => {
     setError(null);
     setLovers([]);
-    setIsLoading(true);
-    
-    async function fetchLovers() {
-      try {
-        let userId = localStorage.getItem('userId');
-        if (!userId) {
-          userId = `user-${Date.now()}`;
-          localStorage.setItem('userId', userId);
-        }
-        const loverProfiles = await getLoverProfileList(userId);
-        setLovers(loverProfiles);
-        setError(null);
-      } catch (error) {
-        console.error('Failed to fetch lovers:', error);
-        setError('无法加载虚拟恋人列表，请检查网络连接或后端服务是否运行');
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    
     fetchLovers();
   };
 

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Upload, Heart, Sparkles, ArrowLeft } from 'lucide-react';
+import { Heart, Sparkles, ArrowLeft, Loader } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
@@ -7,8 +7,9 @@ import { RadioGroup, RadioGroupItem } from '@/app/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { Checkbox } from '@/app/components/ui/checkbox';
-import { createLoverRequest,LoverProfile } from '../types/request';
-import { createLover } from '../request/api';
+
+import { createLoverRequest, LoverProfile } from '../types/request';
+import { createLover, getLoverProfile } from '../request/api';
 
 interface LoverSetupProps {
   onComplete: () => void;
@@ -28,7 +29,7 @@ export function LoverSetup({ onComplete, onBack }: LoverSetupProps) {
     voiceStyle: 0
   });
 
-  const [imagePreview, setImagePreview] = useState<string>('');
+  const [avatarPrompt, setAvatarPrompt] = useState<string>('');
 
   // 生成默认头像
   const generateDefaultAvatar = (name: string, gender: number) => {
@@ -38,16 +39,17 @@ export function LoverSetup({ onComplete, onBack }: LoverSetupProps) {
     return `https://api.dicebear.com/7.x/${style}/svg?seed=${seed}&backgroundColor=b6e3f4,c0aede,d1d4f9`;
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const result = reader.result as string;
-        setImagePreview(result);
-        setProfile({ ...profile, image: result });
-      };
-      reader.readAsDataURL(file);
+  // 异步生成头像 - 发送给后端生成
+  const generateAvatarAsync = async (loverId: string, prompt: string) => {
+    try {
+      // 这里调用后端接口生成头像，后端会异步处理并最终更新数据库
+      // 假设后端有一个 /generate-avatar 接口
+      const response = await getLoverProfile(profile.userId!, loverId, prompt);
+      // 头像生成后，前端可以选择刷新数据或通过其他方式获取最新头像
+      const event = new CustomEvent('lover-avatar-updated', { detail: { loverId, image: response } });
+      window.dispatchEvent(event);
+    } catch (error) {
+      console.error('Error generating avatar:', error);
     }
   };
 
@@ -62,27 +64,36 @@ export function LoverSetup({ onComplete, onBack }: LoverSetupProps) {
 
   const handleSubmit = async () => {
     if (!profile.name) return;
-    const finalProfile = {
-      ...profile,
-      // 如果没有上传图片，生成默认头像
-      image: profile.image || generateDefaultAvatar(profile.name, profile.gender)
-    };
     let userId = localStorage.getItem('userId');
     if (!userId) {
       userId = `user-${Date.now()}`;
       localStorage.setItem('userId', userId);
     }
-    const res = await createLover({
-      user_id: userId,
-      lover_id: profile.id || 'lover-' + Date.now(),
-      avatar: finalProfile.image,
-      name: profile.name,   
-      gender: profile.gender,
-      personality: profile.personality,
-      hobbies: profile.interests.map(interest => interestOptions.indexOf(interest)),
-      talking_style: profile.voiceStyle
-    } as createLoverRequest);
-    onComplete();
+    
+    const loverId = profile.id || 'lover-' + Date.now();
+    const defaultAvatar = generateDefaultAvatar(profile.name, profile.gender);
+    
+    try {
+      // 先创建 lover，使用默认头像
+      const res = await createLover({
+        user_id: userId,
+        lover_id: loverId,
+        avatar: defaultAvatar,
+        name: profile.name,   
+        gender: profile.gender,
+        personality: profile.personality,
+        hobbies: profile.interests.map(interest => interestOptions.indexOf(interest)),
+        talking_style: profile.voiceStyle
+      } as createLoverRequest);
+      
+      // 异步生成头像（不阻塞主流程）
+      if (avatarPrompt.trim()) {
+        generateAvatarAsync(loverId, avatarPrompt);
+      }
+      onComplete();
+    } catch (error) {
+      console.error('Error creating lover:', error);
+    }
   };
 
   const interestOptions = [
@@ -114,30 +125,21 @@ export function LoverSetup({ onComplete, onBack }: LoverSetupProps) {
           <CardDescription>定制一个专属于你的AI伴侣</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* 上传照片 */}
+          {/* 头像描述 Prompt */}
           <div className="space-y-2">
-            <Label>上传照片（可选）</Label>
-            <div className="flex items-center gap-4">
-              <div className="w-32 h-32 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center overflow-hidden bg-gray-50">
-                {imagePreview ? (
-                  <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
-                ) : (
-                  <div className="text-center">
-                    <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                    <p className="text-xs text-gray-400">未上传将<br/>自动生成</p>
-                  </div>
-                )}
-              </div>
-              <div>
-                <Input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  className="max-w-[250px]"
-                />
-                <p className="text-sm text-gray-500 mt-2">支持 JPG、PNG 格式</p>
-                <p className="text-sm text-pink-500 mt-1">💡 不上传将自动生成专属头像</p>
-              </div>
+            <Label htmlFor="avatarPrompt" className="text-pink-500 font-bold text-lg tracking-wide">
+              头像描述 <span className="text-pink-400">*</span>
+            </Label>
+            <div className="space-y-2">
+              <textarea
+                id="avatarPrompt"
+                placeholder="例如: 温柔的女孩, 戴着眼镜, 漫画风格, 长棕色头发..."
+                value={avatarPrompt}
+                onChange={(e) => setAvatarPrompt(e.target.value)}
+                rows={4}
+                className="w-full rounded-lg px-5 py-3 bg-purple-50 border-2 border-purple-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-100 text-purple-700 placeholder-purple-300 shadow-sm transition-all duration-200 resize-none"
+              />
+              <p className="text-sm text-gray-500">✨ 详细描述你想要的虚拟恋人头像风格，我们会为你自动生成独特的头像。描述越详细，生成效果越好！</p>
             </div>
           </div>
 
@@ -266,10 +268,14 @@ export function LoverSetup({ onComplete, onBack }: LoverSetupProps) {
           <Button 
             onClick={handleSubmit} 
             className="w-full bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600"
-            disabled={!profile.name}
+            disabled={!profile.name || !avatarPrompt.trim() || profile.interests.length < 3 || profile.interests.length > 5}
           >
-            <Sparkles className="w-4 h-4 mr-2" />
-            开始我们的故事
+            
+              <>
+                <Sparkles className="w-4 h-4 mr-2" />
+                开始我们的故事
+              </>
+            
           </Button>
         </CardContent>
       </Card>

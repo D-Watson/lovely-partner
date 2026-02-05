@@ -113,7 +113,7 @@ export function LoversList({ lovers, currentLoverId, onSelectLover, onCreateNew,
                     variant="ghost"
                     size="icon"
                     className="text-red-500 hover:text-red-600 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity"
-                    onClick={(e) => handleDelete(e, lover.id)}
+                    onClick={(e) => handleDelete(e, lover.loverId)}
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>

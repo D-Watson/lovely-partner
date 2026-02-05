@@ -28,3 +28,7 @@ export interface LoverProfile {
   interests: string[];
   voiceStyle: number;
 }
+export interface LoverBase{
+  lover_id:string,
+  user_id:string
+}
