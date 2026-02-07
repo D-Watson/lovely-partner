@@ -13,15 +13,15 @@ export function RootLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50">
+    <div className="flex min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50">
       {/* 内容区域 */}
-      <div className="pb-20">
+      <div className="outlet-container border-t">
         <Outlet />
       </div>
 
       {/* 底部导航栏 */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg">
-        <div className="max-w-md mx-auto px-4 py-2 flex justify-around items-center">
+      <div className="bottom-nav fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg">
+        <div className="tab-container mx-auto px-4 py-2 flex justify-around items-center">
           {/* 恋人列表 Tab */}
           <button
             onClick={() => navigate('/lovers')}

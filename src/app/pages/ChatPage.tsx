@@ -31,7 +31,6 @@ export function ChatPage() {
 
         const loverProfiles = await getLoverProfileList(userId);
         const lover = loverProfiles.find(l => l.loverId === currentLoverId);
-
         if (lover) {
           setCurrentLover(lover);
           setIsLoading(false);

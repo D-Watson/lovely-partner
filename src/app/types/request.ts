@@ -32,3 +32,11 @@ export interface LoverBase{
   lover_id:string,
   user_id:string
 }
+
+export interface Message {
+  id: number | string;
+  sender: 'human' | 'ai';
+  content: string;
+  timestamp: Date;
+  type: 'text' | 'care' | 'news';
+}

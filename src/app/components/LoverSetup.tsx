@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+// LoverSetup.tsx
+import { useState } from 'react';
 import { Heart, Sparkles, ArrowLeft, Loader, ArrowRight, ChevronLeft, Image as ImageIcon, User, Smile, MessageSquare, Palette } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
@@ -7,11 +8,13 @@ import { RadioGroup, RadioGroupItem } from '@/app/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { Checkbox } from '@/app/components/ui/checkbox';
-import { Progress } from '@/app/components/ui/progress';
-import { cn } from '@/lib/utils';
-
 import { createLoverRequest, LoverProfile } from '../types/request';
 import { createLover, getLoverProfile } from '../request/api';
+import {getUserId} from '../request/util'
+
+// 导入CSS文件
+import './lover-setup.css';
+import { set } from 'date-fns';
 
 interface LoverSetupProps {
   onComplete: () => void;
@@ -99,13 +102,12 @@ export function LoverSetup({ onComplete, onBack }: LoverSetupProps) {
   };
 
   // 异步生成头像
-  const generateAvatarAsync = async (loverId: string, prompt: string) => {
+  const generateAvatarSync = async (loverId: string, prompt: string) => {
+    const userId = getUserId();
     try {
-      const response = await getLoverProfile(profile.userId!, loverId, prompt);
-      const event = new CustomEvent('lover-avatar-updated', { 
-        detail: { loverId, image: response } 
-      });
-      window.dispatchEvent(event);
+      const response = await getLoverProfile(userId, loverId, prompt);
+      setProfile(prev => ({ ...prev, image: response }));
+      return response;
     } catch (error) {
       console.error('Error generating avatar:', error);
     }
@@ -167,7 +169,7 @@ export function LoverSetup({ onComplete, onBack }: LoverSetupProps) {
     const defaultAvatar = generateDefaultAvatar(profile.name, profile.gender);
     
     try {
-      const res = await createLover({
+      const resBase = await createLover({
         user_id: userId,
         lover_id: loverId,
         avatar: defaultAvatar,
@@ -177,13 +179,16 @@ export function LoverSetup({ onComplete, onBack }: LoverSetupProps) {
         hobbies: profile.interests.map(interest => interestOptions.indexOf(interest)),
         talking_style: profile.voiceStyle
       } as createLoverRequest);
-      
-      if (avatarPrompt.trim()) {
-        generateAvatarAsync(loverId, avatarPrompt);
+      console.log(resBase)
+      const resAvatar = await generateAvatarSync(loverId, avatarPrompt);
+      console.log(resAvatar)
+      if (resBase !==undefined && resAvatar !== undefined) {
+        setIsSubmitting(false);
+        onComplete();
+      } else {
+        throw new Error('Failed to create lover or generate avatar');
       }
       
-      setIsSubmitting(false);
-      onComplete();
     } catch (error) {
       console.error('Error creating lover:', error);
       setIsSubmitting(false);
@@ -199,17 +204,17 @@ export function LoverSetup({ onComplete, onBack }: LoverSetupProps) {
     switch (currentStep) {
       case 1: // 形象
         return (
-          <div className="space-y-6 animate-in fade-in duration-300">
-            <div className="flex items-center justify-center mb-6">
-              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-pink-200 to-purple-300 flex items-center justify-center shadow-lg">
+          <div className="lover-setup-step-content">
+            <div className="lover-setup-step-icon">
+              <div className="lover-step-icon-circle lover-step-avatar-icon">
                 <ImageIcon className="w-10 h-10 text-white" />
               </div>
             </div>
             <div className="space-y-4">
-              <Label htmlFor="avatarPrompt" className="text-xl font-semibold text-gray-800">
+              <Label htmlFor="avatarPrompt" className="lover-step-label">
                 描述你心中的完美形象
               </Label>
-              <p className="text-gray-600 mb-4">
+              <p className="lover-step-hint">
                 越详细的描述，越能生成你理想中的形象。试试包含外貌特征、风格、情绪等细节。
               </p>
               <textarea
@@ -218,7 +223,7 @@ export function LoverSetup({ onComplete, onBack }: LoverSetupProps) {
                 value={avatarPrompt}
                 onChange={(e) => setAvatarPrompt(e.target.value)}
                 rows={6}
-                className="w-full rounded-xl px-4 py-3 bg-white border-2 border-purple-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 text-gray-800 placeholder-gray-400 shadow-sm transition-all duration-200 resize-none"
+                className="lover-textarea"
               />
               <div className="text-sm text-gray-500 space-y-2">
                 <p className="flex items-center gap-2">
@@ -240,17 +245,17 @@ export function LoverSetup({ onComplete, onBack }: LoverSetupProps) {
 
       case 2: // 名字
         return (
-          <div className="space-y-6 animate-in fade-in duration-300">
-            <div className="flex items-center justify-center mb-6">
-              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-200 to-cyan-300 flex items-center justify-center shadow-lg">
+          <div className="lover-setup-step-content">
+            <div className="lover-setup-step-icon">
+              <div className="lover-step-icon-circle lover-step-name-icon">
                 <User className="w-10 h-10 text-white" />
               </div>
             </div>
             <div className="space-y-4">
-              <Label htmlFor="name" className="text-xl font-semibold text-gray-800">
+              <Label htmlFor="name" className="lover-step-label">
                 为你的恋人起一个名字
               </Label>
-              <p className="text-gray-600 mb-4">
+              <p className="lover-step-hint">
                 一个特别的名字，会让你们的相遇更加难忘。可以是你喜欢的名字，或者有特殊意义的称呼。
               </p>
               <Input
@@ -258,7 +263,7 @@ export function LoverSetup({ onComplete, onBack }: LoverSetupProps) {
                 placeholder="例如：小雅、明轩、苏菲、星辰..."
                 value={profile.name}
                 onChange={(e) => setProfile({ ...profile, name: e.target.value })}
-                className="rounded-xl px-4 py-3 bg-white border-2 border-blue-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 text-gray-800 placeholder-gray-400 shadow-sm transition-all duration-200 text-center text-lg font-medium"
+                className="lover-input"
                 autoFocus
               />
             </div>
@@ -266,118 +271,94 @@ export function LoverSetup({ onComplete, onBack }: LoverSetupProps) {
         );
 
       case 3: // 性别
-  return (
-    <div className="space-y-6 animate-in fade-in duration-300">
-      <div className="flex items-center justify-center mb-6">
-        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-pink-200 to-rose-300 flex items-center justify-center shadow-lg">
-          <User className="w-10 h-10 text-white" />
-        </div>
-      </div>
-      <div className="space-y-4">
-        <Label className="text-xl font-semibold text-gray-800">
-          选择恋人的性别
-        </Label>
-        <p className="text-gray-600 mb-6">
-          选择让你感觉最舒适和亲近的性别。
-        </p>
-        <RadioGroup
-          onValueChange={(value) => setProfile({ ...profile, gender: Number(value) })}
-          value={String(profile.gender)}
-          className="grid grid-cols-1 md:grid-cols-3 gap-4"
-        >
-          {[
-            { 
-              value: "0", 
-              label: "男性", 
-              description: "阳光、沉稳、可靠", 
-              selectedColor: "from-blue-400 to-cyan-500",
-              unselectedColor: "bg-blue-50 border-blue-200 text-blue-700"
-            },
-            { 
-              value: "1", 
-              label: "女性", 
-              description: "温柔、体贴、优雅", 
-              selectedColor: "from-pink-400 to-rose-500",
-              unselectedColor: "bg-pink-50 border-pink-200 text-pink-700"
-            },
-            { 
-              value: "2", 
-              label: "其他", 
-              description: "独特、自由、神秘", 
-              selectedColor: "from-purple-400 to-violet-500",
-              unselectedColor: "bg-purple-50 border-purple-200 text-purple-700"
-            }
-          ].map((option) => {
-            const isSelected = profile.gender === Number(option.value);
-            
-            return (
-              <div key={option.value} className="relative">
-                <RadioGroupItem
-                  value={option.value}
-                  id={`gender-${option.value}`}
-                  className="peer sr-only"
-                />
-                <Label
-                  htmlFor={`gender-${option.value}`}
-                  className={`flex flex-col items-center justify-center p-6 rounded-xl border-2 cursor-pointer transition-all duration-300
-                    ${isSelected
-                      ? `scale-105 shadow-lg border-transparent bg-gradient-to-br ${option.selectedColor}`
-                      : `${option.unselectedColor} hover:border-gray-300 hover:bg-gray-50`
-                    }`}
-                >
-                  {/* 图标容器 - 根据选中状态改变背景 */}
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-3
-                    ${isSelected ? 'bg-white/20' : 'bg-white border'}`}
-                  >
-                    <User className={`w-6 h-6 ${isSelected ? 'text-white' : 'text-gray-600'}`} />
-                  </div>
-                  
-                  {/* 文字 - 根据选中状态改变颜色 */}
-                  <span className={`text-lg font-semibold ${isSelected ? 'text-white' : 'text-gray-800'}`}>
-                    {option.label}
-                  </span>
-                  <span className={`text-sm mt-1 ${isSelected ? 'text-white/80' : 'text-gray-600'}`}>
-                    {option.description}
-                  </span>
-                  
-                  {/* 选中指示器 */}
-                  {isSelected && (
-                    <div className="absolute -top-2 -right-2 w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-md">
-                      <div className="w-3 h-3 rounded-full bg-gradient-to-br from-pink-500 to-purple-500"></div>
-                    </div>
-                  )}
-                </Label>
+        return (
+          <div className="lover-setup-step-content">
+            <div className="lover-setup-step-icon">
+              <div className="lover-step-icon-circle lover-step-gender-icon">
+                <User className="w-10 h-10 text-white" />
               </div>
-            );
-          })}
-        </RadioGroup>
-      </div>
-    </div>
-  );
+            </div>
+            <div className="space-y-4">
+              <Label className="lover-step-label">
+                选择恋人的性别
+              </Label>
+              <p className="lover-step-hint">
+                选择让你感觉最舒适和亲近的性别。
+              </p>
+              
+              <div className="lover-gender-options">
+                {[
+                  { 
+                    value: 0, 
+                    label: "男性", 
+                    description: "阳光、沉稳、可靠", 
+                    type: "male"
+                  },
+                  { 
+                    value: 1, 
+                    label: "女性", 
+                    description: "温柔、体贴、优雅", 
+                    type: "female"
+                  },
+                  { 
+                    value: 2, 
+                    label: "其他", 
+                    description: "独特、自由、神秘", 
+                    type: "other"
+                  }
+                ].map((option) => {
+                  const isSelected = profile.gender === option.value;
+                  
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => setProfile({ ...profile, gender: option.value })}
+                      className={`lover-gender-option ${option.type} ${isSelected ? 'selected' : ''}`}
+                    >
+                      <div className="lover-gender-icon">
+                        <User className={`w-6 h-6 ${isSelected ? 'text-white' : ''}`} />
+                      </div>
+                      
+                      <div className="lover-gender-name">{option.label}</div>
+                      <div className="lover-gender-description">{option.description}</div>
+                      
+                      {isSelected && (
+                        <div className="lover-gender-selected-indicator">
+                          <div className="lover-gender-selected-dot"></div>
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        );
 
       case 4: // 性格
         return (
-          <div className="space-y-6 animate-in fade-in duration-300">
-            <div className="flex items-center justify-center mb-6">
-              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-amber-200 to-orange-300 flex items-center justify-center shadow-lg">
+          <div className="lover-setup-step-content">
+            <div className="lover-setup-step-icon">
+              <div className="lover-step-icon-circle lover-step-personality-icon">
                 <Smile className="w-10 h-10 text-white" />
               </div>
             </div>
             <div className="space-y-4">
-              <Label className="text-xl font-semibold text-gray-800">
+              <Label className="lover-step-label">
                 选择恋人的性格特点
               </Label>
-              <p className="text-gray-600 mb-6">
+              <p className="lover-step-hint">
                 性格决定了你们相处的独特方式。选择最吸引你的特质。
               </p>
               <Select 
                 onValueChange={(value) => setProfile({ ...profile, personality: Number(value) })}
                 value={String(profile.personality)}
               >
-                <SelectTrigger className="rounded-xl px-4 py-6 bg-white border-2 border-amber-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 text-gray-800 shadow-sm transition-all duration-200">
+                <SelectTrigger className="lover-select-trigger">
                   <SelectValue placeholder="请选择性格特点" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="lover-select-content">
                   {[
                     { value: "0", label: "温柔体贴", description: "细心周到，懂得照顾人" },
                     { value: "1", label: "活泼开朗", description: "充满活力，乐观向上" },
@@ -389,11 +370,11 @@ export function LoverSetup({ onComplete, onBack }: LoverSetupProps) {
                     <SelectItem 
                       key={option.value} 
                       value={option.value}
-                      className="px-4 py-3 hover:bg-amber-50 cursor-pointer transition-colors"
+                      className="lover-select-item"
                     >
                       <div>
-                        <span className="font-medium text-gray-800">{option.label}</span>
-                        <p className="text-sm text-gray-500 mt-1">{option.description}</p>
+                        <span className="lover-select-item-label">{option.label}</span>
+                        <p className="lover-select-item-description">{option.description}</p>
                       </div>
                     </SelectItem>
                   ))}
@@ -405,73 +386,43 @@ export function LoverSetup({ onComplete, onBack }: LoverSetupProps) {
 
       case 5: // 爱好
         return (
-          <div className="space-y-6 animate-in fade-in duration-300">
-            <div className="flex items-center justify-center mb-6">
-              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-200 to-teal-300 flex items-center justify-center shadow-lg">
+          <div className="lover-setup-step-content">
+            <div className="lover-setup-step-icon">
+              <div className="lover-step-icon-circle lover-step-interests-icon">
                 <Palette className="w-10 h-10 text-white" />
               </div>
             </div>
             <div className="space-y-4">
-              <Label className="text-xl font-semibold text-gray-800">
+              <Label className="lover-step-label">
                 选择共同的兴趣爱好
               </Label>
-              <p className="text-gray-600 mb-6">
+              <p className="lover-step-hint">
                 选择3-5个你们可能会一起分享的爱好，这会让对话更有趣。
               </p>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              
+              <div className="lover-interests-grid">
                 {interestOptions.map((interest, index) => {
                   const isSelected = profile.interests.includes(interest);
-                  const colorClasses = [
-                    { bg: 'bg-pink-50', border: 'border-pink-200', text: 'text-pink-600', selectedBg: 'bg-pink-100', selectedBorder: 'border-pink-400' },
-                    { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-600', selectedBg: 'bg-blue-100', selectedBorder: 'border-blue-400' },
-                    { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-600', selectedBg: 'bg-emerald-100', selectedBorder: 'border-emerald-400' },
-                    { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-600', selectedBg: 'bg-amber-100', selectedBorder: 'border-amber-400' },
-                    { bg: 'bg-purple-50', border: 'border-purple-200', text: 'text-purple-600', selectedBg: 'bg-purple-100', selectedBorder: 'border-purple-400' },
-                    { bg: 'bg-cyan-50', border: 'border-cyan-200', text: 'text-cyan-600', selectedBg: 'bg-cyan-100', selectedBorder: 'border-cyan-400' },
+                  const colorVariants = [
+                    'pink', 'blue', 'emerald', 'amber', 'purple', 'cyan'
                   ];
-                  const color = colorClasses[index % colorClasses.length];
+                  const color = colorVariants[index % colorVariants.length];
                   
                   return (
                     <div
                       key={interest}
                       onClick={() => toggleInterest(interest)}
-                      className={cn(
-                        "flex items-center justify-center p-4 rounded-lg border-2 cursor-pointer transition-all duration-300 hover:scale-105",
-                        isSelected 
-                          ? `${color.selectedBg} ${color.selectedBorder} shadow-md` 
-                          : `${color.bg} ${color.border} hover:shadow-sm`
-                      )}
+                      className={`lover-interest-item lover-interest-${color} ${isSelected ? 'selected' : ''}`}
                     >
-                      <Checkbox
-                        id={`interest-${interest}`}
-                        checked={isSelected}
-                        onCheckedChange={() => {}}
-                        className={cn(
-                          "w-5 h-5 border-2 rounded mr-3",
-                          isSelected ? 'border-current' : 'border-gray-300'
-                        )}
-                        style={{ color: isSelected ? color.text.replace('text-', '') : undefined }}
-                      />
-                      <Label 
-                        htmlFor={`interest-${interest}`}
-                        className={cn(
-                          "font-medium cursor-pointer select-none",
-                          isSelected ? color.text : "text-gray-700"
-                        )}
-                      >
-                        {interest}
-                      </Label>
+                      <div className={`lover-interest-checkbox ${isSelected ? 'selected' : ''}`}></div>
+                      <div className="lover-interest-label">{interest}</div>
                     </div>
                   );
                 })}
               </div>
-              <div className="pt-4 border-t">
-                <p className={cn(
-                  "text-sm font-medium transition-colors",
-                  profile.interests.length >= 3 && profile.interests.length <= 5
-                    ? "text-emerald-600"
-                    : "text-amber-600"
-                )}>
+              
+              <div className="lover-interests-status">
+                <p className={profile.interests.length >= 3 && profile.interests.length <= 5 ? 'valid' : 'invalid'}>
                   {profile.interests.length < 3 
                     ? `已选择 ${profile.interests.length} 个，还需选择 ${3 - profile.interests.length} 个`
                     : profile.interests.length > 5
@@ -486,27 +437,27 @@ export function LoverSetup({ onComplete, onBack }: LoverSetupProps) {
 
       case 6: // 声音
         return (
-          <div className="space-y-6 animate-in fade-in duration-300">
-            <div className="flex items-center justify-center mb-6">
-              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-violet-200 to-purple-300 flex items-center justify-center shadow-lg">
+          <div className="lover-setup-step-content">
+            <div className="lover-setup-step-icon">
+              <div className="lover-step-icon-circle lover-step-voice-icon">
                 <MessageSquare className="w-10 h-10 text-white" />
               </div>
             </div>
             <div className="space-y-4">
-              <Label className="text-xl font-semibold text-gray-800">
+              <Label className="lover-step-label">
                 选择喜欢的说话风格
               </Label>
-              <p className="text-gray-600 mb-6">
+              <p className="lover-step-hint">
                 声音风格会塑造独特的对话体验。选择让你感觉最舒适的风格。
               </p>
               <Select 
                 onValueChange={(value) => setProfile({ ...profile, voiceStyle: Number(value) })}
                 value={String(profile.voiceStyle)}
               >
-                <SelectTrigger className="rounded-xl px-4 py-6 bg-white border-2 border-violet-200 focus:border-violet-500 focus:ring-2 focus:ring-violet-200 text-gray-800 shadow-sm transition-all duration-200">
+                <SelectTrigger className="lover-select-trigger">
                   <SelectValue placeholder="请选择说话风格" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="lover-select-content">
                   {[
                     { value: "0", label: "温暖亲切", description: "像阳光般温暖，让人感到安心" },
                     { value: "1", label: "可爱俏皮", description: "活泼可爱，带着些许调皮" },
@@ -516,11 +467,11 @@ export function LoverSetup({ onComplete, onBack }: LoverSetupProps) {
                     <SelectItem 
                       key={option.value} 
                       value={option.value}
-                      className="px-4 py-3 hover:bg-violet-50 cursor-pointer transition-colors"
+                      className="lover-select-item"
                     >
                       <div>
-                        <span className="font-medium text-gray-800">{option.label}</span>
-                        <p className="text-sm text-gray-500 mt-1">{option.description}</p>
+                        <span className="lover-select-item-label">{option.label}</span>
+                        <p className="lover-select-item-description">{option.description}</p>
                       </div>
                     </SelectItem>
                   ))}
@@ -536,121 +487,100 @@ export function LoverSetup({ onComplete, onBack }: LoverSetupProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-2xl">
-        <CardHeader className="text-center pb-6">
+    <div className="lover-setup-container">
+      <div className="lover-setup-card">
+        <div className="lover-setup-header">
           {/* 返回按钮 */}
-          <div className="absolute left-4 top-4">
-            <Button
-              variant="ghost"
-              size="sm"
+          {onBack && (
+            <button
               onClick={handlePrev}
-              className="text-gray-600 hover:text-gray-800"
+              className="lover-setup-back-btn"
             >
-              <ChevronLeft className="w-4 h-4 mr-1" />
+              <ChevronLeft className="w-4 h-4" />
               {currentStep === 1 ? '返回' : '上一步'}
-            </Button>
-          </div>
+            </button>
+          )}
 
           {/* 标题和图标 */}
-          <div className="flex justify-center mb-6">
-            <div className="relative">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-pink-400 to-purple-500 flex items-center justify-center shadow-lg">
-                <Heart className="w-8 h-8 text-white" />
-              </div>
-              <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center shadow-md">
-                <span className="text-xs font-bold text-white">{currentStep}</span>
+          <div className="lover-setup-icon-container">
+            <div className="lover-setup-main-icon">
+              <Heart className="w-8 h-8 text-white" />
+              <div className="lover-setup-step-badge">
+                {currentStep}
               </div>
             </div>
           </div>
 
           {/* 进度条 */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-sm text-gray-600">
+          <div className="lover-setup-progress-container">
+            <div className="lover-setup-progress-text">
               <span>创建你的虚拟恋人</span>
               <span>步骤 {currentStep} / {steps.length}</span>
             </div>
-            <Progress value={progress} className="h-2 bg-gray-200">
+            <div className="lover-setup-progress-bar">
               <div 
-                className="h-full bg-gradient-to-r from-pink-500 to-purple-500 rounded-full transition-all duration-300"
+                className="lover-setup-progress-fill"
                 style={{ width: `${progress}%` }}
               />
-            </Progress>
+            </div>
           </div>
 
           {/* 步骤标题 */}
-          <CardTitle className="text-2xl font-bold text-gray-800 mt-6">
+          <div className="lover-setup-title">
             {steps[currentStep - 1].title}
-          </CardTitle>
-          <CardDescription className="text-gray-600">
+          </div>
+          <div className="lover-setup-description">
             {steps[currentStep - 1].description}
-          </CardDescription>
-        </CardHeader>
+          </div>
+        </div>
 
-        <CardContent className="space-y-8">
+        <div className="lover-setup-content">
           {/* 步骤内容 */}
           {renderStepContent()}
 
           {/* 导航按钮 */}
-          <div className="pt-6 border-t border-gray-100">
+          <div className="lover-nav-buttons">
             {currentStep < steps.length ? (
-              <Button
+              <button
                 onClick={handleNext}
                 disabled={!isStepValid()}
-                className={cn(
-                  "w-full py-6 text-lg font-semibold rounded-xl transition-all duration-300",
-                  isStepValid()
-                    ? "bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 hover:shadow-lg"
-                    : "bg-gray-200 text-gray-400 cursor-not-allowed"
-                )}
+                className="lover-next-btn"
               >
                 下一步
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </Button>
+                <ArrowRight className="w-5 h-5" />
+              </button>
             ) : (
-              <Button
+              <button
                 onClick={handleSubmit}
                 disabled={!isStepValid() || isSubmitting}
-                className={cn(
-                  "w-full py-6 text-lg font-semibold rounded-xl transition-all duration-300",
-                  isStepValid() && !isSubmitting
-                    ? "bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 hover:shadow-lg"
-                    : "bg-gray-200 text-gray-400 cursor-not-allowed"
-                )}
+                className="lover-submit-btn"
               >
                 {isSubmitting ? (
                   <>
-                    <Loader className="w-5 h-5 mr-2 animate-spin" />
+                    <Loader className="w-5 h-5 animate-spin" />
                     创建中...
                   </>
                 ) : (
                   <>
-                    <Sparkles className="w-5 h-5 mr-2" />
+                    <Sparkles className="w-5 h-5" />
                     开始我们的故事
                   </>
                 )}
-              </Button>
+              </button>
             )}
           </div>
 
           {/* 步骤指示器 */}
-          <div className="flex justify-center space-x-2">
+          <div className="lover-step-indicators">
             {steps.map((step) => (
               <div
                 key={step.id}
-                className={cn(
-                  "w-2 h-2 rounded-full transition-all duration-300",
-                  step.id === currentStep
-                    ? "w-8 bg-gradient-to-r from-pink-500 to-purple-500"
-                    : step.id < currentStep
-                    ? "bg-gradient-to-r from-pink-300 to-purple-300"
-                    : "bg-gray-300"
-                )}
+                className={`lover-step-dot ${step.id === currentStep ? 'active' : step.id < currentStep ? 'completed' : ''}`}
               />
             ))}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

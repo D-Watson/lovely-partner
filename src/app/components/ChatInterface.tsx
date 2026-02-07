@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, use } from 'react';
 import { Send, Heart, Newspaper, Menu, Settings, ArrowLeft, Users } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
@@ -7,18 +7,9 @@ import { Card } from '@/app/components/ui/card';
 import { Badge } from '@/app/components/ui/badge';
 import { NewsPanel } from './NewsPanel';
 import { DailyCarePanel } from './DailyCarePanel';
-import { LoverProfile } from '@/app/types/request';
-
-// 使用 IPv4 地址以避免本机 localhost 解析为 IPv6 (::1) 导致的连接拒绝
-const wsUrl = 'ws://127.0.0.1:8080/lovers';
-
-interface Message {
-  id: string;
-  sender: 'user' | 'lover';
-  content: string;
-  timestamp: Date;
-  type?: 'text' | 'care' | 'news';
-}
+import { LoverProfile, Message } from '@/app/types/request';
+import "./lover-setup.css";
+import { getLoverMessages } from '../request/api';
 
 
 interface ChatInterfaceProps {
@@ -36,8 +27,6 @@ export function ChatInterface({ profile, onReset, onBack }: ChatInterfaceProps) 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const [ws, setWs] = useState<WebSocket | null>(null);
-// 删除或注释掉： import { io,Socket } from 'socket.io-client';
-// 并删除与 socket.io 相关的 wsRef 和 connectSocket 调用
 
 useEffect(() => {
   const userId = localStorage.getItem('userId');
@@ -51,21 +40,31 @@ useEffect(() => {
     console.log('Connected to backend WebSocket server:', socket.url);
     setIsConnected(true);
   };
-
+  setInterval(() => {
+    if(socket.readyState === WebSocket.OPEN){
+      console.log('WebSocket is open, sending ping');
+      socket.send(JSON.stringify({ "action": "heartbeat" }));
+    }
+  }, 30*1000); // 每30秒发送一次ping保持连接
+  
   socket.onmessage = (event) => {
     try {
-      const parsed = JSON.parse(event.data);
-      setMessages(prev => [...prev, {
+      const parsed = event.data;
+      console.log('Received WebSocket message:', parsed, typeof parsed);
+      const msg = {
         id: Date.now().toString(),
-        sender: 'lover',
-        content: parsed.content || event.data,
+        sender: 'ai',
+        content: parsed,
         timestamp: new Date(),
         type: 'text'
-      }]);
-    } catch {
+      } as Message;
+      setMessages(prev => [...prev, msg]);
+      console.log(localStorage.getItem(`messages_${profile.loverId}`));
+    } catch (e) {
+      console.error('Failed to parse WebSocket message:', e);
       setMessages(prev => [...prev, {
         id: Date.now().toString(),
-        sender: 'lover',
+        sender: 'ai',
         content: event.data,
         timestamp: new Date(),
         type: 'text'
@@ -92,14 +91,15 @@ useEffect(() => {
 }, [profile.loverId]);
    
 
-  useEffect(() => {
-    // 从 localStorage 加载该恋人的聊天记录
-    const savedMessages = localStorage.getItem(`messages_${profile.loverId}`);
+const loadMessages = async () => {
+ // 从 服务端 加载该恋人的聊天记录
+
+    const savedMessages = await getLoverMessages(profile.userId, profile.loverId);
+    console.log('Loading messages for loverId:', profile.loverId, 'Saved messages:', savedMessages);
     if (savedMessages) {
       try {
-        const parsed = JSON.parse(savedMessages);
         // 转换时间戳为 Date 对象
-        const messagesWithDates = parsed.map((msg: any) => ({
+        const messagesWithDates = savedMessages.map((msg: any) => ({
           ...msg,
           timestamp: new Date(msg.timestamp)
         }));
@@ -108,13 +108,17 @@ useEffect(() => {
         console.error('Failed to load messages:', e);
       }
     }
+}
+
+  useEffect(() => {
+    loadMessages();
   }, [profile.loverId]);
   const initializeChat = () => {
     // 初始问候消息
     const greetings = getGreeting();
     const initialMessages = [{
       id: '1',
-      sender: 'lover' as const,
+      sender: 'ai' as const,
       content: '',
       timestamp: new Date(),
       type: 'text' as const
@@ -155,30 +159,30 @@ useEffect(() => {
     
     setMessages(prev => [...prev, {
       id: Date.now().toString(),
-      sender: 'lover',
+      sender: 'ai',
       content: randomCare,
       timestamp: new Date(),
       type: 'care'
     }]);
   };
 
-
-  const handleSendMessage = () => {
+const handleSendMessage = () => {
     if (!inputValue.trim()) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
-      sender: 'user',
+      sender: 'human',
       content: inputValue,
       timestamp: new Date(),
       type: 'text'
     };
-
     setMessages(prev => [...prev, userMessage]);
-    
     // 通过 WebSocket 发送消息到后端
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      wsRef.current.send(inputValue);
+      wsRef.current.send(JSON.stringify({
+        action: 'message',
+        content: inputValue
+      }));
       console.log('Message sent via WebSocket:', inputValue);
     } else {
       console.warn('WebSocket is not connected');
@@ -195,7 +199,7 @@ useEffect(() => {
   };
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50">
+    <div className="chat-page bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50">
       {/* 侧边栏 - 新闻面板 */}
       {showNews && (
         <div className="w-80 border-r bg-white shadow-lg">
@@ -207,9 +211,9 @@ useEffect(() => {
       )}
 
       {/* 主聊天区域 */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex-col">
         {/* 顶部导航栏 */}
-        <div className="bg-white border-b px-6 py-4 flex items-center justify-between shadow-sm">
+        <div className="chat-page-top bg-white border-b px-6 py-4 flex items-center justify-between shadow-sm">
           <div className="flex items-center gap-3">
             <Button
               variant="ghost"
@@ -265,13 +269,13 @@ useEffect(() => {
         </div>
 
         {/* 消息区域 */}
-        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+        <div className="chat-main-content flex-col overflow-y-auto px-6 py-4 space-y-4 ">
           {messages.map((message) => (
             <div
               key={message.id}
-              className={`flex gap-3 ${message.sender === 'user' ? 'flex-row-reverse' : 'flex-row'}`}
+              className={`flex gap-3 ${message.sender === 'ai' ? 'flex-row':'flex-row-reverse'}`}
             >
-              {message.sender === 'lover' && (
+              {message.sender === 'ai' && (
                 <Avatar className="w-10 h-10">
                   <AvatarImage src={profile.image} />
                   <AvatarFallback className="bg-gradient-to-br from-pink-400 to-purple-400 text-white text-sm">
@@ -280,9 +284,9 @@ useEffect(() => {
                 </Avatar>
               )}
               
-              <div className={`flex flex-col ${message.sender === 'user' ? 'items-end' : 'items-start'} max-w-[70%]`}>
+              <div className={`flex flex-col ${message.sender === 'human' ? 'items-end' : 'items-start'} max-w-[70%]`}>
                 <Card className={`px-4 py-3 ${
-                  message.sender === 'user' 
+                  message.sender === 'human' 
                     ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white' 
                     : message.type === 'care'
                     ? 'bg-gradient-to-r from-rose-50 to-pink-50 border-pink-200'
@@ -301,7 +305,7 @@ useEffect(() => {
                 </span>
               </div>
 
-              {message.sender === 'user' && (
+              {message.sender === 'human' && (
                 <Avatar className="w-10 h-10">
                   <AvatarFallback className="bg-gray-200">你</AvatarFallback>
                 </Avatar>
@@ -312,23 +316,21 @@ useEffect(() => {
         </div>
 
         {/* 输入区域 */}
-        <div className="bg-white border-t px-6 py-4">
-          <div className="flex gap-3">
+        <div className="chat-space">
             <Input
               placeholder={`和 ${profile.name} 说点什么...`}
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyPress={handleKeyPress}
-              className="flex-1"
+              className=""
             />
             <Button 
               onClick={handleSendMessage}
-              className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600"
+              className=" bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600"
             >
               <Send className="w-4 h-4" />
             </Button>
           </div>
-        </div>
       </div>
     </div>
   );

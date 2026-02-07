@@ -49,8 +49,6 @@ useEffect(() => {
     if (!loverId) return;
     setLovers(prev => prev.map(l => l.loverId === loverId ? { ...l, image } : l));
   };
-  window.addEventListener('lover-avatar-updated', handler as EventListener);
-  return () => window.removeEventListener('lover-avatar-updated', handler as EventListener);
 }, []);
 
 

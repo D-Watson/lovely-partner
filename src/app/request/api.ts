@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { createLoverRequest, LoverProfile } from '../types/request';
-
-import io, { Socket } from 'socket.io-client';
+import { Message} from '../types/request';
+import { Socket } from 'socket.io-client';
 
 const url = 'http://localhost:8080/';
 
@@ -18,29 +18,36 @@ export async function createLover(data: createLoverRequest): Promise<LoverProfil
             },
         })
         console.log('Create lover response:', response.data);
+        if(!response.data){
+            throw new Error('API error: No response data');
+        }
         const res = response.data as any;
+        if(res['code'] !== 200){
+            throw new Error(`API error: ${res['message'] || 'Unknown error'}`);
+        }
+        const resData = res.data as any;
         const loverProfile: LoverProfile = {
-            id: res.id,
-            userId: res.user_id,
-            loverId: res.lover_id,
-            name: res.name,
-            image: res.image,  
-            gender: res.gender,
-            personality: res.personality,
-            interests: res.hobbies,
-            voiceStyle: res.talking_style
+            id: resData.id,
+            userId: resData.user_id,
+            loverId: resData.lover_id,
+            name: resData.name,
+            image: resData.image,  
+            gender: resData.gender,
+            personality: resData.personality,
+            interests: resData.hobbies,
+            voiceStyle: resData.talking_style
         };
         return loverProfile;
     } catch (error: any) {
         console.error('Error creating lover:', error);
-        console.error('Error response data:', error.response?.data);
-        console.error('Error status:', error.response?.status);
+        console.error('err=', error.Content)
         throw error;
     }
 }
 
 export async function getLoverProfile(user_id: string, lover_id: string, prompt: string): Promise<string> {
     var reqUrl = url+'images/upload';
+    console.log('Getting lover profile for user_id:', user_id, 'lover_id:', lover_id, 'prompt:', prompt);
     try {
         const response = await axios({
             url: reqUrl,
@@ -55,8 +62,13 @@ export async function getLoverProfile(user_id: string, lover_id: string, prompt:
             },
         })
         const res = response.data as any;
-        const item = res.data || res; // backend may return {data: {...}} or {...}
-        return item.data;
+        console.log('Get lover profile response:', res);
+        if(res['code'] !== 200){
+            throw new Error(`API error: ${res['message'] || 'Unknown error'}`);
+        }
+        const resData = res.data as any;
+        const imageUrl = resData.avatar;
+        return imageUrl;
     } catch (error) {
         console.error('Error getting lover profile:', error);
         throw error;
@@ -81,7 +93,7 @@ export async function getLoverProfileList(user_id: string): Promise<LoverProfile
             userId: item.user_id,
             loverId: item.lover_id,
             name: item.name,
-            image: item.image,  
+            image: item.avatar,  
             gender: item.gender,
             personality: item.personality,
             interests: item.hobbies,
@@ -126,3 +138,35 @@ export function sendChatMessage(ws: Socket, message: string): void {
     }
 }
 
+
+export async function getLoverMessages(user_id: string, lover_id: string): Promise<Message[]> {
+    var reqUrl = url+'lovers/history';
+    console.log('Getting lover messages for user_id:', user_id, 'lover_id:', lover_id);
+    try {
+        const response = await axios({
+            url: reqUrl,
+            method: 'GET',
+            params: { 
+                user_id: user_id,
+                lover_id: lover_id,
+            }
+        })
+        const res = response.data as any;
+        console.log('Get lover profile response:', res);
+        if(res['code'] !== 200){
+            throw new Error(`API error: ${res['message'] || 'Unknown error'}`);
+        }
+        const resData = res.data as any;
+        const messages: Message[] = resData.map((item: any) => ({
+            id: item.id,
+            sender: item.sender === 'human' ? 'human' : 'ai',
+            content: item.content,
+            timestamp: new Date(item.timestamp),
+            type: item.type === 'care' ? 'care' : 'text'
+        }));
+        return messages;
+    } catch (error) {
+        console.error('Error getting lover messages:', error);
+        throw error;
+    }
+}

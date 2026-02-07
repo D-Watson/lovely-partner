@@ -1,0 +1,727 @@
+/* app/lover-setup.css */
+.lover-setup-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #fce7f3 0%, #f3e8ff 50%, #e0f2fe 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.lover-setup-card {
+  width: 100%;
+  max-width: 42rem;
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.lover-setup-header {
+  text-align: center;
+  padding-bottom: 1.5rem;
+  position: relative;
+}
+
+.lover-setup-back-btn {
+  position: absolute;
+  left: 1rem;
+  top: 1rem;
+  color: #4b5563;
+  background: transparent;
+  border: none;
+  padding: 0.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+  transition: color 0.2s;
+}
+
+.lover-setup-back-btn:hover {
+  color: #1f2937;
+}
+
+.lover-setup-icon-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.lover-setup-main-icon {
+  position: relative;
+  width: 4rem;
+  height: 4rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 25px rgba(236, 72, 153, 0.3);
+}
+
+.lover-setup-step-badge {
+  position: absolute;
+  top: -0.5rem;
+  right: -0.5rem;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: bold;
+}
+
+.lover-setup-progress-container {
+  margin-top: 1rem;
+}
+
+.lover-setup-progress-text {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.875rem;
+  color: #4b5563;
+  margin-bottom: 0.5rem;
+}
+
+.lover-setup-progress-bar {
+  width: 100%;
+  height: 0.5rem;
+  background-color: #e5e7eb;
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.lover-setup-progress-fill {
+  height: 100%;
+  background: linear-gradient(to right, #ec4899 0%, #8b5cf6 100%);
+  border-radius: 9999px;
+  transition: width 0.3s ease;
+}
+
+.lover-setup-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #1f2937;
+  margin-top: 1.5rem;
+}
+
+.lover-setup-description {
+  color: #4b5563;
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+}
+
+.lover-setup-content {
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.lover-setup-step-content {
+  animation: fadeIn 0.3s ease-in-out;
+}
+.tab-container{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 2rem;
+}
+.chat-page-top{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 999;
+}
+.chat-space{
+  display: flex;
+  justify-content: center;
+  position: fixed;
+  bottom: 10vh;
+  left: 0;
+  right: 0; 
+  align-items: center;
+  width: 100%;
+  background-color: white;
+  gap: 1rem;
+  padding: 1rem;
+}
+.chat-input{
+  flex: 1;
+  width: 100%;
+  margin-right: 0.5rem; 
+}
+.chat-button{
+  background-color: #ec4899;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+.bottom-nav{
+  height: 10vh;
+  display: flex;
+  width: 100%;
+  justify-content: space-around;
+  align-items: center;
+  background-color: white;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+}
+.outlet-container{
+  display: flex;
+  width: 100vw;
+  justify-content: center;
+  align-items: center;
+  
+}
+.chat-page{
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+.chat-main-content{
+  position: fixed;
+  height: 75vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow-y: scroll;
+  top: 10vh;
+  bottom: 10vh;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 步骤图标 */
+.lover-setup-step-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.lover-step-icon-circle {
+  width: 5rem;
+  height: 5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* 步骤1 - 形象 */
+.lover-step-avatar-icon {
+  background: linear-gradient(135deg, #fbcfe8 0%, #ddd6fe 100%);
+}
+
+/* 步骤2 - 名字 */
+.lover-step-name-icon {
+  background: linear-gradient(135deg, #bfdbfe 0%, #a5f3fc 100%);
+}
+
+/* 步骤3 - 性别 */
+.lover-step-gender-icon {
+  background: linear-gradient(135deg, #fbcfe8 0%, #fda4af 100%);
+}
+
+/* 步骤4 - 性格 */
+.lover-step-personality-icon {
+  background: linear-gradient(135deg, #fde68a 0%, #fdba74 100%);
+}
+
+/* 步骤5 - 爱好 */
+.lover-step-interests-icon {
+  background: linear-gradient(135deg, #a7f3d0 0%, #5eead4 100%);
+}
+
+/* 步骤6 - 声音 */
+.lover-step-voice-icon {
+  background: linear-gradient(135deg, #ddd6fe 0%, #c4b5fd 100%);
+}
+
+.lover-step-label {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 0.5rem;
+}
+
+.lover-step-hint {
+  color: #4b5563;
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+.lover-textarea {
+  width: 100%;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  background: white;
+  border: 2px solid #ddd6fe;
+  font-size: 1rem;
+  color: #1f2937;
+  transition: all 0.2s;
+  resize: none;
+  font-family: inherit;
+}
+
+.lover-textarea:focus {
+  outline: none;
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+
+.lover-input {
+  width: 100%;
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: white;
+  border: 2px solid #bfdbfe;
+  font-size: 1.125rem;
+  color: #1f2937;
+  text-align: center;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.lover-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.lover-gender-options {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+@media (min-width: 768px) {
+  .lover-gender-options {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.lover-gender-option {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  border-radius: 0.75rem;
+  border: 2px solid #e5e7eb;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-align: center;
+}
+
+.lover-gender-option:hover {
+  border-color: #d1d5db;
+  background-color: #f9fafb;
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.lover-gender-option.selected {
+  border-color: transparent;
+  transform: scale(1.05);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* 男性选项 */
+.lover-gender-option.selected.male {
+  background: linear-gradient(135deg, #60a5fa 0%, #22d3ee 100%);
+  color: white;
+}
+
+.lover-gender-option.male:not(.selected) {
+  background-color: #dbeafe;
+  border-color: #bfdbfe;
+  color: #1e40af;
+}
+
+/* 女性选项 */
+.lover-gender-option.selected.female {
+  background: linear-gradient(135deg, #f472b6 0%, #fb7185 100%);
+  color: white;
+}
+
+.lover-gender-option.female:not(.selected) {
+  background-color: #fce7f3;
+  border-color: #fbcfe8;
+  color: #9d174d;
+}
+
+/* 其他选项 */
+.lover-gender-option.selected.other {
+  background: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%);
+  color: white;
+}
+
+.lover-gender-option.other:not(.selected) {
+  background-color: #f3f4f6;
+  border-color: #e5e7eb;
+  color: #4b5563;
+}
+
+.lover-gender-icon {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.75rem;
+}
+
+.lover-gender-option.selected .lover-gender-icon {
+  background-color: rgba(255, 255, 255, 0.2);
+  border: none;
+}
+
+.lover-gender-option:not(.selected) .lover-gender-icon {
+  background-color: white;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.lover-gender-name {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.lover-gender-description {
+  font-size: 0.875rem;
+  opacity: 0.8;
+}
+
+.lover-gender-selected-indicator {
+  position: absolute;
+  top: -0.5rem;
+  right: -0.5rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  background-color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.lover-gender-selected-dot {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+}
+
+/* 兴趣选择 */
+.lover-interests-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+@media (min-width: 768px) {
+  .lover-interests-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.lover-interest-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  border: 2px solid;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.lover-interest-item:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.lover-interest-item.selected {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* 兴趣颜色变体 */
+.lover-interest-pink {
+  background-color: #fdf2f8;
+  border-color: #fbcfe8;
+  color: #9d174d;
+}
+
+.lover-interest-pink.selected {
+  background-color: #fce7f3;
+  border-color: #f472b6;
+}
+
+.lover-interest-blue {
+  background-color: #eff6ff;
+  border-color: #bfdbfe;
+  color: #1e40af;
+}
+
+.lover-interest-blue.selected {
+  background-color: #dbeafe;
+  border-color: #60a5fa;
+}
+
+.lover-interest-emerald {
+  background-color: #ecfdf5;
+  border-color: #a7f3d0;
+  color: #047857;
+}
+
+.lover-interest-emerald.selected {
+  background-color: #d1fae5;
+  border-color: #10b981;
+}
+
+.lover-interest-amber {
+  background-color: #fffbeb;
+  border-color: #fde68a;
+  color: #b45309;
+}
+
+.lover-interest-amber.selected {
+  background-color: #fef3c7;
+  border-color: #f59e0b;
+}
+
+.lover-interest-purple {
+  background-color: #f5f3ff;
+  border-color: #ddd6fe;
+  color: #5b21b6;
+}
+
+.lover-interest-purple.selected {
+  background-color: #ede9fe;
+  border-color: #8b5cf6;
+}
+
+.lover-interest-cyan {
+  background-color: #ecfeff;
+  border-color: #a5f3fc;
+  color: #155e75;
+}
+
+.lover-interest-cyan.selected {
+  background-color: #cffafe;
+  border-color: #22d3ee;
+}
+
+.lover-interest-checkbox {
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 2px solid;
+  border-radius: 0.25rem;
+  margin-right: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lover-interest-checkbox.selected {
+  border-color: currentColor;
+}
+
+.lover-interest-checkbox.selected::after {
+  content: "✓";
+  font-size: 0.875rem;
+  font-weight: bold;
+}
+
+.lover-interest-label {
+  font-weight: 500;
+  cursor: pointer;
+  user-select: none;
+}
+
+.lover-interests-status {
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.lover-interests-status.valid {
+  color: #059669;
+}
+
+.lover-interests-status.invalid {
+  color: #d97706;
+}
+
+/* 选择框样式 */
+.lover-select-trigger {
+  width: 100%;
+  height: 3rem;
+  border-radius: 0.75rem;
+  padding: 1rem 1rem;
+  background: white;
+  border: 2px solid #fde68a;
+  font-size: 1rem;
+  color: #1f2937;
+  transition: all 0.2s;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.lover-select-trigger:focus {
+  outline: none;
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+}
+
+.lover-select-content {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  z-index: 50;
+  margin-top: 0.25rem;
+}
+
+.lover-select-item {
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  color: #1f2937;
+  font-size: 0.875rem;
+}
+
+.lover-select-item:hover {
+  background-color: #fef3c7;
+}
+
+.lover-select-item-label {
+  font-weight: 500;
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.lover-select-item-description {
+  color: #6b7280;
+  font-size: 0.75rem;
+}
+
+/* 导航按钮 */
+.lover-nav-buttons {
+  padding-top: 1.5rem;
+  border-top: 1px solid #f3f4f6;
+}
+
+.lover-next-btn,
+.lover-submit-btn {
+  width: 100%;
+  height: 3rem;
+  padding: 1.25rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.3s;
+}
+
+.lover-next-btn:enabled {
+  background: linear-gradient(to right, #ec4899 0%, #8b5cf6 100%);
+  color: white;
+  box-shadow: 0 4px 20px rgba(236, 72, 153, 0.3);
+}
+
+.lover-next-btn:enabled:hover {
+  background: linear-gradient(to right, #db2777 0%, #7c3aed 100%);
+  box-shadow: 0 6px 25px rgba(236, 72, 153, 0.4);
+  transform: translateY(-1px);
+}
+
+.lover-next-btn:disabled {
+  background-color: #e5e7eb;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.lover-submit-btn:enabled {
+  background: linear-gradient(to right, #10b981 0%, #0d9488 100%);
+  color: white;
+  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3);
+}
+
+.lover-submit-btn:enabled:hover {
+  background: linear-gradient(to right, #059669 0%, #0f766e 100%);
+  box-shadow: 0 6px 25px rgba(16, 185, 129, 0.4);
+  transform: translateY(-1px);
+}
+
+.lover-submit-btn:disabled {
+  background-color: #e5e7eb;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+/* 步骤指示器 */
+.lover-step-indicators {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.lover-step-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  background-color: #d1d5db;
+}
+
+.lover-step-dot.active {
+  width: 2rem;
+  background: linear-gradient(to right, #ec4899 0%, #8b5cf6 100%);
+}
+
+.lover-step-dot.completed {
+  background: linear-gradient(to right, #f0abfc 0%, #c4b5fd 100%);
+}
