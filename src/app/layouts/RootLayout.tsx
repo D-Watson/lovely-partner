@@ -20,6 +20,7 @@ export function RootLayout() {
       </div>
 
       {/* 底部导航栏 */}
+      { localStorage.getItem('token') && (
       <div className="bottom-nav fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg">
         <div className="tab-container mx-auto px-4 py-2 flex justify-around items-center">
           {/* 恋人列表 Tab */}
@@ -78,7 +79,7 @@ export function RootLayout() {
             <span className="text-xs mt-1">我的</span>
           </button>
         </div>
-      </div>
+      </div>)}
     </div>
   );
 }

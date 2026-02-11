@@ -3,7 +3,7 @@ import { createLoverRequest, LoverProfile } from '../types/request';
 import { Message} from '../types/request';
 import { Socket } from 'socket.io-client';
 
-const url = 'http://localhost:8080/';
+const url = 'http://localhost:8000/';
 
 export async function createLover(data: createLoverRequest): Promise<LoverProfile> {
     var reqUrl = url+'lovers/create';
