@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-// import { login, register } from '../request/api';
+import { login, register, sendCode } from '../request/api';
 import './AuthPages.css'; // 创建这个CSS文件
 
 // 登录页面组件
@@ -10,7 +10,7 @@ const LoginPage: React.FC = () => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-
+  const [email, setEmail] = useState('');
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!username.trim() || !password.trim()) {
@@ -21,24 +21,25 @@ const LoginPage: React.FC = () => {
     setIsLoading(true);
     setError('');
     
-    // 模拟API调用
-    setTimeout(() => {
-      // try {
-      //   const res = await login({ username, password });
-      //   if (res.token) {
-      //     localStorage.setItem('token', res.token);
-      //     navigate('/');
-      //   } else {
-      //     setError('登陆失败，请检查用户名和密码');
-      //   }
-      // } catch (err) {
-      //   setError('登陆失败，请重试');
-      // } finally {
-      //   setIsLoading(false);
-      // }
+    // API调用
+    setTimeout(async() => {
+      try {
+        const res = await login( email, password );
+        if (res.token) {
+          const info = JSON.stringify(res)
+          localStorage.setItem('user-info', info);
+          localStorage.setItem('userId', res.user_id);
+          navigate('/');
+        } else {
+          setError('登陆失败，请检查邮箱和密码');
+        }
+      } catch (err) {
+        setError('登陆失败，请重试');
+      } finally {
+        setIsLoading(false);
+      }
       setIsLoading(false);
       // 演示用 - 模拟成功登录
-      localStorage.setItem('token', 'demo-token');
       navigate('/');
     }, 1000);
   };
@@ -78,6 +79,7 @@ const LoginPage: React.FC = () => {
                 placeholder="请输入用户名"
                 value={username}
                 onChange={e => setUsername(e.target.value)}
+                onFocus={() => setError('')}
                 className="form-input"
               />
             </div>
@@ -93,6 +95,7 @@ const LoginPage: React.FC = () => {
                 placeholder="请输入密码"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
+                onFocus={() => setError('')}
                 className="form-input"
               />
             </div>
@@ -150,18 +153,76 @@ const LoginPage: React.FC = () => {
 // 注册页面组件
 const RegisterPage: React.FC = () => {
   const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
+  const [verificationCode, setVerificationCode] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isSendingCode, setIsSendingCode] = useState(false);
+  const [codeCountdown, setCodeCountdown] = useState(0);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (codeCountdown <= 0) return;
+    const timer = window.setInterval(() => {
+      setCodeCountdown((prev) => (prev > 1 ? prev - 1 : 0));
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [codeCountdown]);
+
+  const isValidEmail = (value: string) => /\S+@\S+\.\S+/.test(value);
+
+  const handleSendCode = () => {
+    if (!email.trim()) {
+      setError('请输入邮箱');
+      return;
+    }
+    if (!isValidEmail(email)) {
+      setError('请输入有效的邮箱地址');
+      return;
+    }
+    setError('');
+    setSuccess('');
+    setIsSendingCode(true);
+    setTimeout(async() => {
+      try {
+        const res = await sendCode(email);
+        if (res) {
+          setSuccess('验证码已发送至邮箱，请注意查收');
+          setCodeCountdown(60);
+        } else {
+          setError('验证码发送失败，请重试');
+        }
+      } catch (error) {
+        setError('验证码发送失败，请重试');
+      } finally {
+        setIsSendingCode(false);
+      }
+    }, 800);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!username.trim()) {
       setError('请输入用户名');
+      return;
+    }
+
+    if (!email.trim()) {
+      setError('请输入邮箱');
+      return;
+    }
+
+    if (!isValidEmail(email)) {
+      setError('请输入有效的邮箱地址');
+      return;
+    }
+
+    if (!verificationCode.trim()) {
+      setError('请输入邮箱验证码');
       return;
     }
     
@@ -179,21 +240,21 @@ const RegisterPage: React.FC = () => {
     setError('');
     setSuccess('');
     
-    // 模拟API调用
-    setTimeout(() => {
-      // try {
-      //   const res = await register({ username, password });
-      //   if (res.success) {
-      //     setSuccess('注册成功，正在跳转到登录页面...');
-      //     setTimeout(() => navigate('/login'), 1500);
-      //   } else {
-      //     setError(res.message || '注册失败');
-      //   }
-      // } catch (err) {
-      //   setError('注册失败，请重试');
-      // } finally {
-      //   setIsLoading(false);
-      // }
+    // API调用
+    setTimeout(async () => {
+      try {
+        const res = await register( username, password, email );
+        if (res != undefined && res.user_id != undefined) {
+          setSuccess('注册成功，正在跳转到登录页面...');
+          setTimeout(() => navigate('/login'), 1500);
+        } else {
+          setError(res.msg || '注册失败');
+        }
+      } catch (err) {
+        setError('注册失败，请重试');
+      } finally {
+        setIsLoading(false);
+      }
       setSuccess('注册成功！正在跳转到登录页面...');
       setIsLoading(false);
       setTimeout(() => navigate('/login'), 1500);
@@ -239,10 +300,58 @@ const RegisterPage: React.FC = () => {
                 placeholder="请输入用户名（4-20位字符）"
                 value={username}
                 onChange={e => setUsername(e.target.value)}
+                onFocus={() => setError('')}
                 className="form-input"
               />
             </div>
             <p className="input-hint">用户名可用于登录和展示</p>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="reg-email">邮箱</label>
+            <div className="input-with-icon">
+              <span className="input-icon">📧</span>
+              <input
+                id="reg-email"
+                type="email"
+                placeholder="请输入常用邮箱"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                onFocus={() => setError('')}
+                className="form-input"
+              />
+            </div>
+            <p className="input-hint">用于接收验证码与账号通知</p>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="reg-code">邮箱验证码</label>
+            <div className="code-row">
+              <div className="input-with-icon code-input">
+                <span className="input-icon">🔢</span>
+                <input
+                  id="reg-code"
+                  type="text"
+                  placeholder="请输入邮箱验证码"
+                  value={verificationCode}
+                  onChange={e => setVerificationCode(e.target.value)}
+                  onFocus={() => setError('')}
+                  className="form-input"
+                />
+              </div>
+              <button
+                type="button"
+                className="code-button"
+                onClick={handleSendCode}
+                disabled={isSendingCode || codeCountdown > 0}
+              >
+                {codeCountdown > 0
+                  ? `${codeCountdown}s后重试`
+                  : isSendingCode
+                    ? '发送中...'
+                    : '发送验证码'}
+              </button>
+            </div>
           </div>
           
           <div className="form-group">
@@ -255,6 +364,7 @@ const RegisterPage: React.FC = () => {
                 placeholder="至少6位字符"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
+                onFocus={() => setError('')}
                 className="form-input"
               />
             </div>
@@ -270,6 +380,7 @@ const RegisterPage: React.FC = () => {
                 placeholder="请再次输入密码"
                 value={confirm}
                 onChange={e => setConfirm(e.target.value)}
+                onFocus={() => setError('')}
                 className="form-input"
               />
             </div>

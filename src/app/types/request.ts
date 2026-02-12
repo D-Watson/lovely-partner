@@ -40,3 +40,14 @@ export interface Message {
   timestamp: Date;
   type: 'text' | 'care' | 'news';
 }
+export interface UserLoginRes{
+  user_id: string;
+  username: string;
+  token: string;
+}
+
+export interface UserRegisterRes{
+  user_id: string;
+  username: string;
+  msg: string;
+}

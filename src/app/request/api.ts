@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { createLoverRequest, LoverProfile } from '../types/request';
-import { Message} from '../types/request';
+import { Message, UserLoginRes, UserRegisterRes} from '../types/request';
 import { Socket } from 'socket.io-client';
 
 const url = 'http://localhost:8000/';
@@ -169,4 +169,101 @@ export async function getLoverMessages(user_id: string, lover_id: string): Promi
         console.error('Error getting lover messages:', error);
         throw error;
     }
+}
+
+export async function login(email: string, password: string): Promise<UserLoginRes> {
+    var reqUrl = url+'user/login';
+        try {
+            const response = await axios({
+                url: reqUrl,
+                method: 'POST',
+                data: { 
+                    email: email,
+                    password: password
+                },
+                headers: {
+                'Content-Type': 'application/json'      
+                },
+            });
+            const res = response.data as any;
+            if(res['code'] === 200){
+                const resData = res.data as any;
+                const loginRes: UserLoginRes = {
+                    user_id: resData.user_id,
+                    username: resData.username,
+                    token: resData.token
+                };
+                return loginRes;
+            } else {
+                throw new Error(`Login failed: ${res['message'] || 'Unknown error'}`);
+            }
+        } catch (error) {
+            console.error('Error during login:', error);
+            throw error;
+        }
+}
+
+export async function register(username: string, password: string, email: string = '', code: string = ''): Promise<UserRegisterRes> {
+    var reqUrl = url+'user/register';
+    
+        try {
+            const response = await axios({
+                url: reqUrl,
+                method: 'POST',
+                data: { 
+                    username: username,
+                    email: email,
+                    password: password,
+                    email_token: code
+                },
+                headers: {
+                'Content-Type': 'application/json'      
+                },
+            });
+            const res = response.data as any;
+            if(res['code'] === 200){
+                const resData = res.data as any;
+                const registerRes: UserRegisterRes = {
+                    user_id: resData.user_id,
+                    username: resData.username,
+                    msg: res['msg']
+                };
+                return registerRes;
+            } else {
+                const registerRes: UserRegisterRes = {
+                    user_id: '',
+                    username: '',
+                    msg: res['msg'] || '注册失败'
+                };
+                return registerRes;
+            }
+        } catch (error) {
+            console.error('Error during registration:', error);
+            throw error;
+        }
+}
+
+
+export async function sendCode(email: string): Promise<boolean> {
+    var reqUrl = url+'user/send_email_code';
+    try{
+        const response = await axios({
+            url: reqUrl,
+            method: 'POST',
+            data: { 
+                email: email
+            },
+            headers: {
+            'Content-Type': 'application/json'      
+            },
+        });
+        const res = response.data as any;
+        if(res['code'] === 200 && res['data'] === true){
+            return true;
+        } 
+    } catch (error) {   
+        console.error('Error sending code:', error);
+        return false;
+    }
+    return false;
 }
