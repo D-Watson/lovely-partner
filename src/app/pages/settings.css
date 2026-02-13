@@ -1,0 +1,359 @@
+/* 全局样式 */
+.settings-container {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  min-height: 100vh;
+  width: 100%;
+  background: linear-gradient(135deg, #eff6ff 0%, #f5f3ff 50%, #faf5ff 100%);
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* 主容器 */
+.settings-wrapper {
+  max-width: 28rem;
+  margin: 0 auto;
+  padding: 2rem 1rem 5rem 1rem;
+}
+
+/* 用户信息卡片 */
+.user-card {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  border-radius: 1.5rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.avatar-container {
+  position: relative;
+}
+
+.user-avatar {
+  width: 4rem;
+  height: 4rem;
+  border-radius: 50%;
+  border: 4px solid white;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  object-fit: cover;
+}
+
+.avatar-badge {
+  position: absolute;
+  bottom: -0.25rem;
+  right: -0.25rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  background: #3b82f6;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.badge-icon {
+  width: 0.75rem;
+  height: 0.75rem;
+  color: white;
+}
+
+.user-details {
+  flex: 1;
+}
+
+.user-name {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 0.25rem 0;
+}
+
+.user-email {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+/* 标题区域 */
+.header-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.title-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: #2563eb;
+  margin-right: 0.5rem;
+}
+
+.page-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+}
+
+/* 功能按钮列表 */
+.function-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* 功能按钮基础样式 */
+.function-btn {
+  width: 100%;
+  background: white;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: all 0.2s ease;
+  text-align: left;
+  font-family: inherit;
+  font-size: 1rem;
+}
+
+.function-btn:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transform: translateY(-1px);
+}
+
+.function-btn:active {
+  transform: translateY(0);
+}
+
+/* 按钮内容 */
+.btn-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* 图标容器 */
+.icon-wrapper {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease;
+}
+
+/* 文本容器 */
+.text-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.function-title {
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 0.125rem 0;
+  font-size: 1rem;
+}
+
+.function-desc {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+/* 箭头图标 */
+.arrow-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: #9ca3af;
+  transition: color 0.2s ease;
+}
+
+.function-btn:hover .arrow-icon {
+  color: inherit;
+}
+
+/* 切换账号按钮 */
+.switch-account {
+  background: linear-gradient(90deg, #dbeafe 0%, #e0e7ff 100%);
+  border-color: #bfdbfe;
+  color: #1e40af;
+}
+
+.switch-account:hover {
+  background: linear-gradient(90deg, #dbeafe 0%, #c7d2fe 100%);
+}
+
+.switch-account .icon-wrapper {
+  background: #dbeafe;
+}
+
+.switch-account:hover .icon-wrapper {
+  background: #bfdbfe;
+}
+
+.switch-account .arrow-icon {
+  color: #3b82f6;
+}
+
+/* 修改密码按钮 */
+.change-password {
+  background: linear-gradient(90deg, #dcfce7 0%, #d1fae5 100%);
+  border-color: #bbf7d0;
+  color: #065f46;
+}
+
+.change-password:hover {
+  background: linear-gradient(90deg, #dcfce7 0%, #a7f3d0 100%);
+}
+
+.change-password .icon-wrapper {
+  background: #dcfce7;
+}
+
+.change-password:hover .icon-wrapper {
+  background: #bbf7d0;
+}
+
+.change-password .arrow-icon {
+  color: #10b981;
+}
+
+/* 账号绑定按钮 */
+.account-bind {
+  background: linear-gradient(90deg, #f3e8ff 0%, #fce7f3 100%);
+  border-color: #e9d5ff;
+  color: #7c3aed;
+}
+
+.account-bind:hover {
+  background: linear-gradient(90deg, #f3e8ff 0%, #fbcfe8 100%);
+}
+
+.account-bind .icon-wrapper {
+  background: #f3e8ff;
+}
+
+.account-bind:hover .icon-wrapper {
+  background: #e9d5ff;
+}
+
+.account-bind .arrow-icon {
+  color: #8b5cf6;
+}
+
+/* 关于我们按钮 */
+.about-us {
+  background: linear-gradient(90deg, #f9fafb 0%, #f1f5f9 100%);
+  border-color: #e5e7eb;
+  color: #374151;
+}
+
+.about-us:hover {
+  background: linear-gradient(90deg, #f9fafb 0%, #e2e8f0 100%);
+}
+
+.about-us .icon-wrapper {
+  background: #f9fafb;
+}
+
+.about-us:hover .icon-wrapper {
+  background: #e5e7eb;
+}
+
+.about-us .arrow-icon {
+  color: #6b7280;
+}
+
+/* 清除数据按钮 */
+.clear-data {
+  background: linear-gradient(90deg, #fee2e2 0%, #ffedd5 100%);
+  border-color: #fecaca;
+  color: #991b1b;
+}
+
+.clear-data:hover {
+  background: linear-gradient(90deg, #fee2e2 0%, #fed7aa 100%);
+}
+
+.clear-data .icon-wrapper {
+  background: #fee2e2;
+}
+
+.clear-data:hover .icon-wrapper {
+  background: #fecaca;
+}
+
+.clear-data .arrow-icon {
+  color: #ef4444;
+}
+
+/* 退出登录按钮 */
+.logout-btn {
+  width: 100%;
+  background: linear-gradient(90deg, #1f2937 0%, #111827 100%);
+  color: white;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  border: none;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  margin-top: 2rem;
+  font-family: inherit;
+}
+
+.logout-btn:hover {
+  background: linear-gradient(90deg, #111827 0%, #000000 100%);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+.logout-btn:active {
+  transform: translateY(0);
+}
+
+.logout-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: white;
+}
+
+/* 底部信息 */
+.footer-info {
+  text-align: center;
+  padding-top: 1.5rem;
+  padding-bottom: 1rem;
+}
+
+.version {
+  font-size: 0.875rem;
+  color: #9ca3af;
+  margin: 0 0 0.25rem 0;
+}
+
+.copyright {
+  font-size: 0.75rem;
+  color: #d1d5db;
+  margin: 0;
+}

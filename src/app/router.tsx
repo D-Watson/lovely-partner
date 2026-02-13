@@ -5,7 +5,7 @@ import { ChatPage } from './pages/ChatPage';
 import { SetupPage } from './pages/SetupPage';
 import { DailyPage } from './pages/DailyPage';
 import { NewsPage } from './pages/NewsPage';
-import { SettingsPage } from './pages/SettingsPage';
+import SettingsPage from './pages/SettingsPage';
 import {LoginPage, RegisterPage} from './pages/LoginPage';
 import React from 'react';
 

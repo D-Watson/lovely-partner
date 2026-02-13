@@ -1,9 +1,34 @@
 import axios from 'axios';
+// axios请求拦截器：自动添加userId和token到请求头，排除登录和注册
+// axios.interceptors.request.use(config => {
+//     const userInfo = localStorage.getItem('user-info');
+//     if (!userInfo){
+//         return config;
+//     }
+//     const user = JSON.parse(userInfo);
+//     const userId = user.user_id;
+//     const token = user.token;
+//     // 排除登录和注册接口
+//     if (
+//         config.url &&
+//         !config.url.includes('/user/login') &&
+//         !config.url.includes('/user/register') &&
+//         !config.url.includes('/user/send_email_code') &&
+//         userId && token
+//     ) {
+//         config.headers = {
+//             ...config.headers,
+//             'x-user-id': userId,
+//             'x-token': token
+//         };
+//     }
+//     return config;
+// }, error => Promise.reject(error));
 import { createLoverRequest, LoverProfile } from '../types/request';
 import { Message, UserLoginRes, UserRegisterRes} from '../types/request';
 import { Socket } from 'socket.io-client';
 
-const url = 'http://localhost:8000/';
+const url = 'http://localhost:8080/';
 
 export async function createLover(data: createLoverRequest): Promise<LoverProfile> {
     var reqUrl = url+'lovers/create';
@@ -14,7 +39,9 @@ export async function createLover(data: createLoverRequest): Promise<LoverProfil
             method: 'POST',
             data: data,
             headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'x-user-id': data.user_id,
+            'x-token': localStorage.getItem('token')
             },
         })
         console.log('Create lover response:', response.data);
@@ -58,7 +85,9 @@ export async function getLoverProfile(user_id: string, lover_id: string, prompt:
                 prompt: prompt
             },
             headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'x-user-id': user_id,
+            'x-token': localStorage.getItem('token')
             },
         })
         const res = response.data as any;
@@ -84,7 +113,11 @@ export async function getLoverProfileList(user_id: string): Promise<LoverProfile
             method: 'GET',
             params: { 
                 user_id: user_id
-            }
+            },
+            headers: {
+            'x-user-id': user_id,
+            'x-token': localStorage.getItem('token')  
+            }  
         })
         console.log('Get lover profile list response:', response.data);
         const res = response.data as any;
@@ -118,7 +151,9 @@ export function deleteLover(user_id: string, lover_id: string): Promise<void> {
                     lover_id: lover_id
                 },
                 headers: {
-                'Content-Type': 'application/json'      
+                'Content-Type': 'application/json',
+                'x-user-id': user_id,
+                'x-token': localStorage.getItem('token')   
                 },
             });
             resolve();
@@ -149,6 +184,10 @@ export async function getLoverMessages(user_id: string, lover_id: string): Promi
             params: { 
                 user_id: user_id,
                 lover_id: lover_id,
+            },
+            headers: {
+                'x-user-id': user_id,
+                'x-token': localStorage.getItem('token')
             }
         })
         const res = response.data as any;
@@ -221,19 +260,22 @@ export async function register(username: string, password: string, email: string
                 },
             });
             const res = response.data as any;
+            console.log('Register response:', res);
             if(res['code'] === 200){
                 const resData = res.data as any;
                 const registerRes: UserRegisterRes = {
                     user_id: resData.user_id,
                     username: resData.username,
-                    msg: res['msg']
+                    msg: res['msg'],
+                    code: res['code']
                 };
                 return registerRes;
             } else {
                 const registerRes: UserRegisterRes = {
                     user_id: '',
                     username: '',
-                    msg: res['msg'] || '注册失败'
+                    msg: res['msg'],
+                    code: res['code']
                 };
                 return registerRes;
             }
@@ -258,6 +300,7 @@ export async function sendCode(email: string): Promise<boolean> {
             },
         });
         const res = response.data as any;
+        console.log('Send code response:', res);
         if(res['code'] === 200 && res['data'] === true){
             return true;
         } 

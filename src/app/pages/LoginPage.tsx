@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { login, register, sendCode } from '../request/api';
 import './AuthPages.css'; // 创建这个CSS文件
+import { set } from 'date-fns';
 
 // 登录页面组件
 const LoginPage: React.FC = () => {
@@ -13,35 +14,31 @@ const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!username.trim() || !password.trim()) {
-      setError('请输入用户名和密码');
+    if (!email.trim() || !password.trim()) {
+      setError('请输入邮箱和密码');
       return;
     }
-    
     setIsLoading(true);
     setError('');
-    
     // API调用
-    setTimeout(async() => {
-      try {
-        const res = await login( email, password );
-        if (res.token) {
-          const info = JSON.stringify(res)
-          localStorage.setItem('user-info', info);
-          localStorage.setItem('userId', res.user_id);
-          navigate('/');
-        } else {
-          setError('登陆失败，请检查邮箱和密码');
-        }
-      } catch (err) {
-        setError('登陆失败，请重试');
-      } finally {
+    try {
+      const res = await login( email, password );
+      console.log('Login response:', res);
+      if (res.token != undefined) {
+        const info = JSON.stringify(res)
+        localStorage.setItem('user-info', info);
+        localStorage.setItem('userId', res.user_id);
+        localStorage.setItem('token', res.token); // 关键：单独存token，供AuthRoute判断
         setIsLoading(false);
+        navigate('/lovers');
+      } else {
+        setError('登陆失败，请检查邮箱和密码');
       }
+    } catch (err) {
+      setError('登陆失败，请重试');
+    } finally {
       setIsLoading(false);
-      // 演示用 - 模拟成功登录
-      navigate('/');
-    }, 1000);
+    }
   };
 
   return (
@@ -70,15 +67,15 @@ const LoginPage: React.FC = () => {
         
         <form onSubmit={handleSubmit} className="auth-form">
           <div className="form-group">
-            <label htmlFor="username">用户名</label>
+            <label htmlFor="email">邮箱</label>
             <div className="input-with-icon">
               <span className="input-icon">👤</span>
               <input
-                id="username"
-                type="text"
-                placeholder="请输入用户名"
-                value={username}
-                onChange={e => setUsername(e.target.value)}
+                id="email"
+                type="email"
+                placeholder="请输入邮箱"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
                 onFocus={() => setError('')}
                 className="form-input"
               />
@@ -243,21 +240,25 @@ const RegisterPage: React.FC = () => {
     // API调用
     setTimeout(async () => {
       try {
-        const res = await register( username, password, email );
-        if (res != undefined && res.user_id != undefined) {
+        const res = await register( username, password, email, verificationCode );
+        if (res.code === 200){
           setSuccess('注册成功，正在跳转到登录页面...');
           setTimeout(() => navigate('/login'), 1500);
-        } else {
-          setError(res.msg || '注册失败');
+        }else if(res.code === 2005){
+          setError("验证码已过期，请重新发送");
+        }else if(res.code === 2009){
+          setError('验证码错误，请检查后重新输入');
+        }else if(res.code === 2001){
+          setError('该邮箱已被注册，请直接登录或使用其他邮箱注册');
+        }
+        else{
+          setError(res.msg || '注册失败，请重试');
         }
       } catch (err) {
         setError('注册失败，请重试');
       } finally {
         setIsLoading(false);
       }
-      setSuccess('注册成功！正在跳转到登录页面...');
-      setIsLoading(false);
-      setTimeout(() => navigate('/login'), 1500);
     }, 1000);
   };
 

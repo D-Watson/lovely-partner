@@ -14,7 +14,6 @@ import {getUserId} from '../request/util'
 
 // 导入CSS文件
 import './lover-setup.css';
-import { set } from 'date-fns';
 
 interface LoverSetupProps {
   onComplete: () => void;

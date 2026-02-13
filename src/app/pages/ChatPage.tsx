@@ -4,6 +4,51 @@ import { ChatInterface } from '../components/ChatInterface';
 import { getLoverProfileList } from '../request/api';
 import { LoverProfile } from '../types/request';
 
+// 定义内联样式对象
+const styles = {
+  container: {
+    minHeight: '100vh',
+    width: '100%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    background: 'linear-gradient(135deg, #fdf2f8 0%, #faf5ff 50%, #eff6ff 100%)',
+    boxSizing: 'border-box' as const,
+  },
+  loadingContainer: {
+    textAlign: 'center' as const,
+  },
+  spinner: {
+    display: 'block',
+    width: '48px',
+    height: '48px',
+    margin: '0 auto 16px auto',
+    border: '3px solid transparent',
+    borderTopColor: '#ec4899',
+    borderRadius: '50%',
+    animation: 'spin 1s linear infinite',
+  },
+  text: {
+    color: '#4b5563',
+    fontSize: '16px',
+    margin: 0,
+  },
+  chatWrapper: {
+    width: '100%',
+    height: '100vh',
+    display: 'flex',
+    flexDirection: 'column' as const,
+  },
+};
+
+// 定义旋转动画关键帧
+const spinKeyframes = `
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+`;
+
 export function ChatPage() {
   const navigate = useNavigate();
   const [currentLover, setCurrentLover] = useState<LoverProfile | null>(null);
@@ -11,7 +56,6 @@ export function ChatPage() {
   const [hasLoaded, setHasLoaded] = useState(false);
 
   useEffect(() => {
-    // 如果已经加载过，就不再加载了
     if (hasLoaded) return;
 
     async function loadCurrentLover() {
@@ -62,30 +106,40 @@ export function ChatPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">加载中...</p>
+      <>
+        <style>{spinKeyframes}</style>
+        <div style={styles.container}>
+          <div style={styles.loadingContainer}>
+            <div style={styles.spinner}></div>
+            <p style={styles.text}>加载中...</p>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
   if (!currentLover) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50">
-        <div className="text-center">
-          <p className="text-gray-600">请先选择一个虚拟恋人</p>
+      <div style={styles.container}>
+        <div style={styles.loadingContainer}>
+          <p style={styles.text}>请先选择一个虚拟恋人</p>
         </div>
       </div>
     );
   }
 
   return (
-    <ChatInterface
-      profile={currentLover}
-      onReset={handleReset}
-      onBack={handleBack}
-    />
+    <>
+      <style>{spinKeyframes}</style>
+      <div style={styles.container}>
+        <div style={styles.chatWrapper}>
+          <ChatInterface
+            profile={currentLover}
+            onReset={handleReset}
+            onBack={handleBack}
+          />
+        </div>
+      </div>
+    </>
   );
 }

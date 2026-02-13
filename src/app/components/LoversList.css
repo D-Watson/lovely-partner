@@ -1,0 +1,22 @@
+.create-card{
+    width: 20rem;
+    height: 10rem;
+    display: flex;
+    border-width: 2px;
+    border-style: dashed;
+    border-color: #f9a8d4; /* pink-300 */
+    background-color: rgba(255, 255, 255, 0.5); /* bg-white/50 */
+    cursor: pointer;
+    transition: all 0.15s ease-in-out; /* Tailwind 默认 transition-all 时长和缓动 */
+}
+.create-card:hover {
+    border-color: #ec4899; /* pink-500 */
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1); /* hover:shadow-lg */
+}
+.lover-page{
+    width: 100%;
+    height: 100%;
+    display: flex;
+}
+
+

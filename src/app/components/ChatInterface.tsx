@@ -8,7 +8,7 @@ import { Badge } from '@/app/components/ui/badge';
 import { NewsPanel } from './NewsPanel';
 import { DailyCarePanel } from './DailyCarePanel';
 import { LoverProfile, Message } from '@/app/types/request';
-import "./lover-setup.css";
+import './chat.css';
 import { getLoverMessages } from '../request/api';
 
 
@@ -199,10 +199,10 @@ const handleSendMessage = () => {
   };
 
   return (
-    <div className="chat-page bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50">
+    <div className="chat-page">
       {/* 侧边栏 - 新闻面板 */}
       {showNews && (
-        <div className="w-80 border-r bg-white shadow-lg">
+        <div className="news-panel-sidebar">
           <NewsPanel 
             interests={profile.interests} 
             onClose={() => setShowNews(false)}
@@ -211,34 +211,36 @@ const handleSendMessage = () => {
       )}
 
       {/* 主聊天区域 */}
-      <div className="flex-1 flex-col">
+      <div className={`chat-main-container ${showNews ? 'with-sidebar' : ''}`}>
         {/* 顶部导航栏 */}
-        <div className="chat-page-top bg-white border-b px-6 py-4 flex items-center justify-between shadow-sm">
-          <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="sm"
+        <div className="chat-page-top">
+          <div className="user-info-container">
+            <button
+              className="back-button"
               onClick={onBack}
             >
-              <Users className="w-4 h-4" />
-            </Button>
-            <Avatar className="w-12 h-12">
-              <AvatarImage src={profile.image} />
-              <AvatarFallback className="bg-gradient-to-br from-pink-400 to-purple-400 text-white">
-                {profile.name[0]}
-              </AvatarFallback>
-            </Avatar>
-            <div>
-              <h2 className="font-semibold">{profile.name}</h2>
-              <p className="text-sm text-gray-500">
+              <Users className="icon" />
+            </button>
+            <div className="avatar-container">
+              {profile.image ? (
+                <img src={profile.image} alt={profile.name} className="avatar-image" />
+              ) : (
+                <div className="avatar-fallback">
+                  {profile.name[0]}
+                </div>
+              )}
+            </div>
+            <div className="user-details">
+              <h2 className="user-name">{profile.name}</h2>
+              <p className="user-status">
                 {isConnected ? (
                   <span className="flex items-center gap-1">
-                    <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                    <span className="status-indicator status-online"></span>
                     在线 • 随时陪伴你
                   </span>
                 ) : (
                   <span className="flex items-center gap-1">
-                    <span className="w-2 h-2 bg-gray-400 rounded-full animate-pulse"></span>
+                    <span className="status-indicator status-connecting"></span>
                     连接中...
                   </span>
                 )}
@@ -246,69 +248,66 @@ const handleSendMessage = () => {
             </div>
           </div>
           
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
+          <div className="action-buttons">
+            <button
+              className="button button-outline"
               onClick={() => setShowNews(!showNews)}
-              className="gap-2"
             >
-              <Newspaper className="w-4 h-4" />
+              <Newspaper className="icon" />
               今日资讯
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
+            </button>
+            <button
+              className="button button-outline"
               onClick={sendCareMessage}
-              className="gap-2"
             >
-              <Heart className="w-4 h-4" />
+              <Heart className="icon" />
               关心我
-            </Button>
+            </button>
           </div>
         </div>
 
         {/* 消息区域 */}
-        <div className="chat-main-content flex-col overflow-y-auto px-6 py-4 space-y-4 ">
+        <div className="chat-main-content">
           {messages.map((message) => (
             <div
               key={message.id}
-              className={`flex gap-3 ${message.sender === 'ai' ? 'flex-row':'flex-row-reverse'}`}
+              className={`message-item ${message.sender === 'ai' ? 'message-ai' : 'message-human'}`}
             >
               {message.sender === 'ai' && (
-                <Avatar className="w-10 h-10">
-                  <AvatarImage src={profile.image} />
-                  <AvatarFallback className="bg-gradient-to-br from-pink-400 to-purple-400 text-white text-sm">
-                    {profile.name[0]}
-                  </AvatarFallback>
-                </Avatar>
-              )}
-              
-              <div className={`flex flex-col ${message.sender === 'human' ? 'items-end' : 'items-start'} max-w-[70%]`}>
-                <Card className={`px-4 py-3 ${
-                  message.sender === 'human' 
-                    ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white' 
-                    : message.type === 'care'
-                    ? 'bg-gradient-to-r from-rose-50 to-pink-50 border-pink-200'
-                    : 'bg-white'
-                }`}>
-                  {message.type === 'care' && (
-                    <div className="flex items-center gap-2 mb-2">
-                      <Heart className="w-4 h-4 text-pink-500" />
-                      <Badge variant="secondary" className="text-xs">每日关心</Badge>
+                <div className="avatar-container">
+                  {profile.image ? (
+                    <img src={profile.image} alt={profile.name} className="avatar-image" />
+                  ) : (
+                    <div className="avatar-fallback avatar-fallback-sm">
+                      {profile.name[0]}
                     </div>
                   )}
-                  <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                </Card>
-                <span className="text-xs text-gray-400 mt-1 px-2">
+                </div>
+              )}
+              
+              <div className="message-bubble-container">
+                <div className={`message-bubble ${
+                  message.sender === 'human' 
+                    ? 'message-bubble-human' 
+                    : message.type === 'care'
+                    ? 'message-bubble-care'
+                    : 'message-bubble-ai'
+                }`}>
+                  {message.type === 'care' && (
+                    <div className="care-message-header">
+                      <Heart className="icon" />
+                      <span className="care-badge">每日关心</span>
+                    </div>
+                  )}
+                  <p>{message.content}</p>
+                </div>
+                <span className="message-timestamp">
                   {message.timestamp.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}
                 </span>
               </div>
 
               {message.sender === 'human' && (
-                <Avatar className="w-10 h-10">
-                  <AvatarFallback className="bg-gray-200">你</AvatarFallback>
-                </Avatar>
+                <div className="user-avatar-small">你</div>
               )}
             </div>
           ))}
@@ -317,19 +316,25 @@ const handleSendMessage = () => {
 
         {/* 输入区域 */}
         <div className="chat-space">
-            <Input
+            <textarea
               placeholder={`和 ${profile.name} 说点什么...`}
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              onKeyPress={handleKeyPress}
-              className=""
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendMessage();
+                }
+              }}
+              className="message-input"
+              rows={1}
             />
-            <Button 
+            <button 
               onClick={handleSendMessage}
-              className=" bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600"
+              className="send-button"
             >
-              <Send className="w-4 h-4" />
-            </Button>
+              <Send className="icon" />
+            </button>
           </div>
       </div>
     </div>

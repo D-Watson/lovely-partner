@@ -50,4 +50,5 @@ export interface UserRegisterRes{
   user_id: string;
   username: string;
   msg: string;
+  code: number;
 }

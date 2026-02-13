@@ -24,9 +24,9 @@ async function fetchLovers() {
     setError(null);
     try {
       let userId = localStorage.getItem('userId');
+      console.log('Fetching lover profiles for userId:', userId);
       if (!userId) {
-        userId = `user-${Date.now()}`;
-        localStorage.setItem('userId', userId);
+        throw new Error('用户ID未找到，请重新登录');
       }
       const loverProfiles = await getLoverProfileList(userId);
       console.log('Fetched lover profiles:', loverProfiles);

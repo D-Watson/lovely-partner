@@ -1,5 +1,6 @@
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { MessageCircle, Users, Heart, Settings, Plus } from 'lucide-react';
+import './RootLayout.css';
 
 export function RootLayout() {
   const navigate = useNavigate();
@@ -13,16 +14,16 @@ export function RootLayout() {
   };
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50">
+    <div className="root-bg">
       {/* 内容区域 */}
-      <div className="outlet-container border-t">
+      <div className="outlet-container">
         <Outlet />
       </div>
 
       {/* 底部导航栏 */}
       { localStorage.getItem('token') && (
       <div className="bottom-nav fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg">
-        <div className="tab-container mx-auto px-4 py-2 flex justify-around items-center">
+        <div className="nav-buttons">
           {/* 恋人列表 Tab */}
           <button
             onClick={() => navigate('/lovers')}
@@ -51,7 +52,7 @@ export function RootLayout() {
             <span className="text-xs mt-1">消息</span>
           </button>
 
-          {/* 日常关怀 Tab */}
+          {/* 日常关怀 Tab
           <button
             onClick={() => navigate('/daily')}
             className={`flex flex-col items-center py-3 px-4 rounded-lg transition-all ${
@@ -63,7 +64,7 @@ export function RootLayout() {
           >
             <Heart className="w-6 h-6" />
             <span className="text-xs mt-1">日常</span>
-          </button>
+          </button> */}
 
           {/* 设置 Tab */}
           <button
