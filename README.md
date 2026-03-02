@@ -6,8 +6,9 @@
      Run `npm run dev` to start the development server.
   3. 运行示例：
 
-<img width="45%" alt="image" src="https://github.com/user-attachments/assets/04406be1-766d-4e4a-97a7-8de750920644" />
-<img width="45%" src="https://github.com/user-attachments/assets/8fd83569-72f8-4fb2-b567-4aa3b3bd8794" />
+<img width="30%" alt="image" src="https://github.com/user-attachments/assets/48e92c81-7506-4177-9e5d-970122c2eb76" />
+<img width="30%" alt="image" src="https://github.com/user-attachments/assets/04406be1-766d-4e4a-97a7-8de750920644" />
+<img width="30%" src="https://github.com/user-attachments/assets/8fd83569-72f8-4fb2-b567-4aa3b3bd8794" />
 
 
 
