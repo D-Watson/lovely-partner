@@ -67,7 +67,6 @@ export async function createLover(data: createLoverRequest): Promise<LoverProfil
         return loverProfile;
     } catch (error: any) {
         console.error('Error creating lover:', error);
-        console.error('err=', error.Content)
         throw error;
     }
 }
